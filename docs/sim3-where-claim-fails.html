@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulator 3: Where does the sign-flip explanation break?</title>
+<style>
+:root{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--border:#27415c;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f7fa;--panel:#fff;--text:#14212e;--muted:#4a5c70;--teal:#00796b;--coral:#c2412d;--amber:#9a6700;--border:#c6d2de;color-scheme:light}}
+:root[data-theme="dark"]{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--border:#27415c;color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Georgia,serif}
+main{max-width:760px;margin:0 auto;padding:18px 16px 50px}
+h1{font:700 1.5rem/1.25 system-ui,sans-serif;margin:.2em 0}
+h2{font:700 1.1rem system-ui,sans-serif;color:var(--teal);margin:0 0 .4em}
+.sec{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;margin:16px 0}
+.q{font:600 .78rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--amber)}
+.tag{display:inline-block;font:700 .7rem system-ui,sans-serif;border:1px solid currentColor;border-radius:6px;padding:1px 6px;margin-right:6px;color:var(--teal)}
+.muted{color:var(--muted);font-size:.88rem}
+.ctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0;font:.9rem system-ui,sans-serif}
+button{font:600 .85rem system-ui,sans-serif;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-height:44px;cursor:pointer}
+button[aria-pressed="true"]{border-color:var(--teal);color:var(--teal)}
+.out{font:.9rem/1.5 system-ui,sans-serif;background:var(--bg);border-radius:8px;padding:8px 12px;margin:8px 0}
+.g{display:grid;grid-template-columns:104px repeat(3,1fr);gap:4px;font:.8rem system-ui,sans-serif;align-items:stretch}
+.g .h{color:var(--muted);align-self:end;padding:2px}
+.cell{min-height:52px;border:2px solid transparent;color:#06121f;font-weight:700;padding:4px}
+.cell.pick{border-color:#fff;outline:2px dashed var(--amber)}
+.cell.bad{border-color:var(--coral);box-shadow:inset 0 0 0 2px #000}
+.cell.q0{background:var(--bg);color:var(--muted);border-color:var(--border)}
+dl{margin:0;font-size:.92rem}dt{font:700 .85rem system-ui,sans-serif;color:var(--amber);margin-top:.6em}dd{margin:0}
+a{color:var(--teal)}svg{width:100%;height:auto}svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+</style></head><body><main>
+<p class="q">Simulator 3 of a series · interactive</p>
+<h1>When does “a missing symmetry explains it” stop being enough?</h1>
+<p>A good explanation should say where it fails. The paper tested its claim on five tasks, each under three definitions of “trained well enough”. Can you guess where the claim breaks?</p>
+<p class="muted"><span class="tag">PAPER</span>All numbers come from Tables 5 and 6 of Lakhanpal (2026), v2. Nothing here is simulated.</p>
+
+<section class="sec"><p class="q">Step 1 · Predict</p>
+<h2>Tap the cells where you think the claim fails</h2>
+<p class="muted">“Fails” means the barrier left after searching every permutation and sign flip is above ε = 0.5 points (upper quartile over pairs). Columns are the training-error tolerance used to include networks.</p>
+<div class="g" id="g" role="group" aria-label="Task by threshold grid"></div>
+<div class="ctl"><button id="rv">Reveal</button><button id="mt1" aria-pressed="true">Colour: residual</button><button id="mt2" aria-pressed="false">Colour: same-line share</button><button id="rs">Reset</button></div>
+<div class="out" id="out" aria-live="polite">Pick any cells (dashed outline), then reveal.</div>
+<svg id="cb" viewBox="0 0 600 34" role="img" aria-label="Colour bar"></svg></section>
+
+<section class="sec"><h2>What the map says</h2>
+<p>The two failures (pentagon at 1%, hexagon at 5%) are also the cells where many pairs learned <i>different</i> lines. Switch the colour to the same-line share to see it. The link is one-directional: learning the same lines almost always closed the barrier, but different-line pairs sometimes closed too (23 of 58 distinct different-line pairs ended below ε), so the map shows association, not a rule.</p>
+<div class="out" id="t6"></div>
+<p class="muted">Pooled Table 6, exploratory (split decided after seeing results): at 2%, all 157 same-line pairs ended at or below 0.21 points; the 8 different-line pairs kept 2.38–9.58. Over all three thresholds, 328 of 331 distinct same-line pairs ended below ε.</p></section>
+
+<section class="sec"><h2>Expert notes</h2>
+<dl>
+<dt>Minimal width h*</dt><dd>The smallest trained width with at least 10 networks under the tolerance; operational, so it changes with the column (e.g. pentagon h* = 5 at 1%, 4 at 2%, 3 at 5%).</dd>
+<dt>Residual</dt><dd>Upper quartile of the exact_sign training-error barrier: best of all 2<sup>h</sup>h! permutation and flip combinations, chosen by the 25-point barrier. A lower bound on the continuous supremum.</dd>
+<dt>Same-line test</dt><dd>Pairs match when every line agrees within 10° and 0.25 standardized units. Exploratory link to identifiability: irreducible networks computing the same function differ only by permutations and flips (Sussmann).</dd>
+<dt>Caveat</dt><dd>Pairs with a nearly reducible network are excluded (two, hexagon at 5%). Hexagon h* = 4 at 2% is an upper bound.</dd></dl>
+<p class="muted"><a href="explainer.html">Full interactive paper page</a> · <a href="index.html">All simulators</a> · github.com/MrigeshLakhanpal/sign-flips-lmc</p></section>
+</main>
+<script>
+(function(){
+var T=["Coffee (triangle)","Triangle","Quadrilateral","Pentagon","Hexagon"],C=[1,2,5];
+/* [h*, pairs, same-line, residual UQ] */
+var D=[[[3,28,28,.04],[3,36,36,.05],[3,38,34,.05]],[[3,46,46,.06],[3,47,47,.06],[3,47,47,.06]],[[4,28,28,.07],[4,32,30,.07],[3,48,44,.22]],[[5,18,11,3.26],[4,21,21,.07],[3,46,46,.18]],[[6,30,22,.09],[4,29,23,.13],[4,48,18,2.58]]];
+var T6={1:"1%: same lines 135 pairs (median 0.03, max 0.20); different lines 15 pairs (median 0.17, range 0.00–4.27).",2:"2%: same lines 157 pairs (median 0.03, max 0.21); different lines 8 pairs (median 3.74, range 2.38–9.58).",5:"5%: same lines 189 pairs (median 0.06, max 0.74); different lines 38 pairs (median 1.06, range 0.02–6.06)."};
+var S={pick:{},rev:false,mt:1};
+function ramp(u){u=Math.max(0,Math.min(1,u));var a=[27,42,107],b=[46,196,182],c=[255,200,87],p=u<.5?[a,b,u*2]:[b,c,(u-.5)*2];return p[0].map(function(v,i){return Math.round(v+(p[1][i]-v)*p[2])})}
+function tval(d){return S.mt===1?(Math.log10(d[3])-Math.log10(.03))/(Math.log10(4)-Math.log10(.03)):d[2]/d[1]}
+function render(){
+ var g=document.getElementById("g"),h="<div class='h'></div>";C.forEach(function(c){h+="<div class='h'>"+c+"% tolerance</div>"});
+ T.forEach(function(t,r){h+="<div class='h'>"+t+"</div>";C.forEach(function(c,k){var d=D[r][k],id=r+"-"+k,bad=d[3]>.5,cls="cell"+(S.pick[id]?" pick":"")+(S.rev?(bad?" bad":""):" q0"),st=S.rev?"background:rgb("+ramp(tval(d))+")":"";
+  var tx=S.rev?(S.mt===1?d[3].toFixed(2)+(bad?" ✗":" ✓"):(100*d[2]/d[1]).toFixed(0)+"% same")+"<br>h*="+d[0]+", "+d[1]+" pairs":(S.pick[id]?"fail?":"?");
+  h+="<button class='"+cls+"' style='"+st+"' data-id='"+id+"' aria-pressed='"+!!S.pick[id]+"'>"+tx+"</button>"})});
+ g.innerHTML=h;
+ Array.prototype.forEach.call(g.querySelectorAll("button"),function(b){b.onclick=function(){var id=b.getAttribute("data-id");
+  if(S.rev){var p=id.split("-"),d=D[p[0]][p[1]];document.getElementById("out").textContent=T[p[0]]+" at "+C[p[1]]+"%: h*="+d[0]+", "+d[1]+" pairs, "+d[2]+"/"+d[1]+" same lines, residual upper quartile "+d[3].toFixed(2)+" points ("+(d[3]>.5?"above":"at or below")+" ε).";return}
+  S.pick[id]=!S.pick[id];render()}});
+ var cb="",lo=S.mt===1?"0.03":"0%",mid=S.mt===1?"0.5 (ε) is at 62%":"50%",hi=S.mt===1?"4 points (log scale)":"100%";
+ for(var j=0;j<60;j++){cb+="<rect x='"+(40+j*9)+"' y='4' width='9' height='12' fill='rgb("+ramp(j/59)+")'/>"}
+ cb+="<text x='40' y='30'>"+lo+"</text><text x='260' y='30'>"+(S.mt===1?"ε=0.5 ≈ 58% of bar":"50%")+"</text><text x='470' y='30'>"+hi+"</text>";
+ document.getElementById("cb").innerHTML=cb;
+ document.getElementById("mt1").setAttribute("aria-pressed",S.mt===1);document.getElementById("mt2").setAttribute("aria-pressed",S.mt===2)}
+document.getElementById("rv").onclick=function(){var ok=0,fp=0,fn=0;
+ T.forEach(function(t,r){C.forEach(function(c,k){var id=r+"-"+k,bad=D[r][k][3]>.5,p=!!S.pick[id];if(p&&bad)ok++;else if(p)fp++;else if(bad)fn++})});
+ S.rev=true;render();document.getElementById("out").textContent="Failing cells: 2 (pentagon at 1%, hexagon at 5%). You caught "+ok+", flagged "+fp+" that pass, missed "+fn+". Tap any cell for details.";
+ document.getElementById("t6").textContent=T6[1]+" "+T6[2]+" "+T6[5]};
+document.getElementById("mt1").onclick=function(){S.mt=1;render()};document.getElementById("mt2").onclick=function(){S.mt=2;render()};
+document.getElementById("rs").onclick=function(){S={pick:{},rev:false,mt:1};document.getElementById("out").textContent="Pick any cells (dashed outline), then reveal.";document.getElementById("t6").textContent="";render()};
+render();
+})();
+</script></body></html>
