@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulator 1: Why can’t you average two identical networks?</title>
+<style>
+:root{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--border:#27415c;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f7fa;--panel:#fff;--text:#14212e;--muted:#4a5c70;--teal:#00796b;--coral:#c2412d;--amber:#9a6700;--border:#c6d2de;color-scheme:light}}
+:root[data-theme="dark"]{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--border:#27415c;color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Georgia,serif}
+main{max-width:760px;margin:0 auto;padding:18px 16px 50px}
+h1{font:700 1.55rem/1.25 system-ui,sans-serif;margin:.2em 0}
+h2{font:700 1.1rem system-ui,sans-serif;color:var(--teal);margin:0 0 .4em}
+.sec{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;margin:16px 0}
+.q{font:600 .78rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--amber)}
+.tag{display:inline-block;font:700 .7rem system-ui,sans-serif;border:1px solid currentColor;border-radius:6px;padding:1px 6px;margin-right:6px}
+.toy{color:var(--amber)}.fact{color:var(--teal)}
+.muted{color:var(--muted);font-size:.88rem}
+.ctl{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;margin:10px 0;font:.9rem system-ui,sans-serif}
+.ctl label{display:flex;flex-direction:column;gap:2px;min-width:140px;flex:1}
+input[type=range]{width:100%}
+button{font:600 .85rem system-ui,sans-serif;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-height:40px;cursor:pointer}
+button[aria-pressed="true"]{border-color:var(--teal);color:var(--teal)}
+.out{font:.9rem/1.5 system-ui,sans-serif;background:var(--bg);border-radius:8px;padding:8px 12px;margin:8px 0}
+svg,canvas{width:100%;height:auto;display:block}
+svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+.eq{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin:8px 0;overflow-x:auto;white-space:nowrap;font:1rem "Cambria Math",Georgia,serif}
+dl{margin:0;font-size:.92rem}dt{font:700 .85rem system-ui,sans-serif;color:var(--amber);margin-top:.6em}dd{margin:0}
+a{color:var(--teal)}
+</style>
+</head>
+<body>
+<main>
+<p class="q">Simulator 1 of a series · interactive</p>
+<h1>If two networks compute exactly the same function, why can’t you simply average them?</h1>
+<p>Two neural networks can look different inside yet behave identically. Averaging their weights, which is the idea behind merging models, can still produce a broken network. This page lets you see why, with one neuron.</p>
+<p class="muted"><span class="tag toy">TOY MODEL</span>One sigmoid unit with made-up weights (w=2, b=0.5), run on the paper’s identity. It illustrates the mechanism; it is not an experimental result.</p>
+
+<section class="sec" id="game">
+<p class="q">Step 1 · Predict first</p>
+<h2>Take a neuron and its “mirror twin”. Blend them 50/50. What happens to its output?</h2>
+<div class="ctl" id="guess">
+<button data-g="0">No change: same function</button>
+<button data-g="1">Changes by up to half its output weight</button>
+<button data-g="2">Changes by up to its full output weight</button>
+</div>
+<div class="out" id="reveal" aria-live="polite">Pick one, then play with the simulator below.</div>
+</section>
+
+<section class="sec" id="play">
+<p class="q">Step 2 · Play</p>
+<h2>Drag along the path from the neuron to its twin</h2>
+<div class="ctl">
+<button id="m1" aria-pressed="true">Straight blend</button>
+<button id="m2" aria-pressed="false">Detour via a spare neuron</button>
+</div>
+<div class="ctl">
+<label>Position α: <b id="pv">0.50</b><input id="pos" type="range" min="0" max="1" step="0.01" value="0.5"></label>
+<label>Output weight s: <b id="sv">−11.14</b><input id="sw" type="range" min="-12" max="12" step="0.01" value="-11.14"></label>
+<button id="rst">Reset</button>
+</div>
+<svg id="sim" viewBox="0 0 600 240" role="img" aria-label="Neuron output versus input: original and current path point"></svg>
+<div class="out" id="simout" aria-live="polite"></div>
+</section>
+
+<section class="sec" id="heat">
+<p class="q">Step 3 · See the whole path at once</p>
+<h2>Where along the path does the output change?</h2>
+<p class="muted">Heat map: horizontal axis is position α along the path, vertical axis is the input x from −4 to 4. Colour is |output − original output|, scaled from 0 to the bound |s|/2 (colour bar below). Follows the path chosen above. Tap or hover for exact values.</p>
+<canvas id="hm" width="600" height="220" role="img" aria-label="Heat map of output change versus alpha and input"></canvas>
+<svg id="cb" viewBox="0 0 600 34" role="img" aria-label="Colour bar from 0 to s over 2"></svg>
+<div class="out" id="hmout">Tap the map to read a value.</div>
+</section>
+
+<section class="sec" id="surf">
+<p class="q">Step 4 · Rotate the surface</p>
+<h2>The same heat map as a 3D surface</h2>
+<p class="muted">Axes: α runs left to right, input x runs front to back, height is |output change| from 0 to |s|/2. Drag the surface or use the sliders. Straight blend shows a ridge at α = 0.5; the detour shows a flat sheet.</p>
+<canvas id="sf" width="600" height="360" role="img" aria-label="Rotatable 3D surface of output change versus alpha and input" style="touch-action:none"></canvas>
+<div class="ctl"><label>Rotate (yaw °)<input id="sy" type="range" min="-180" max="180" value="40"></label><label>Tilt (pitch °)<input id="sp" type="range" min="10" max="90" value="50"></label></div>
+</section>
+
+<section class="sec" id="theory">
+<h2>Expert notes</h2>
+<p class="muted"><span class="tag fact">PAPER</span>Lakhanpal (2026), preprint v2, Sections 2 and 4.2, Appendix B.</p>
+<dl>
+<dt>Sign-flip symmetry</dt><dd>For one-hidden-layer sigmoid networks, σ(−z)=1−σ(z) gives an exact symmetry of the parameters; with permutations, the group has 2<sup>h</sup>h! elements at width h.</dd>
+<dt>Completeness</dt><dd>For irreducible networks (Sussmann), permutations and flips are the only function-preserving transformations.</dd>
+<dt>Midpoint erasure</dt><dd>On the straight line to the flipped copy, the unit’s (w, b, s) all vanish at α=½; its contribution to the logit changes by −s(σ(z)−½), up to |s|/2.</dd>
+<dt>Linear mode connectivity barrier</dt><dd>B(θ<sub>A</sub>,θ<sub>B</sub>) = sup<sub>α</sub>[L(θ<sub>α</sub>) − ((1−α)L(θ<sub>A</sub>)+αL(θ<sub>B</sub>))]. Permutation matching cannot undo a flip.</dd>
+<dt>Spare-unit path</dt><dd>Lemma 1: (s−t)σ(z) − tσ(−z) + (c+t) = sσ(z)+c, so the function is constant along a piecewise-linear path (existence for tanh: Farrugia-Roberts). It shows a flat path exists, not that the straight-line barrier is zero.</dd>
+<dt>Scope</dt><dd>One hidden layer, sigmoid, 2-D tasks. ReLU has no sign flip and is open.</dd>
+</dl>
+<div class="eq">(w, b, s, c) ↦ (−w, −b, −s, c+s)</div>
+<p class="muted">Full explainer: <a href="explainer.html">interactive paper page</a> · <a href="index.html">all simulators</a> · Code and results: github.com/MrigeshLakhanpal/sign-flips-lmc (doi:10.5281/zenodo.23314245)</p>
+</section>
+</main>
+<script>
+(function(){
+function sg(z){return 1/(1+Math.exp(-z))}
+var S={mode:"blend",pos:0.5,s:-11.14},W=2,B=0.5;
+function f0(x){return S.s*sg(W*x+B)}
+function fa(x,a){
+ if(S.mode==="blend"){var k=1-2*a;return k*S.s*sg(k*(W*x+B))+a*S.s}
+ var t=a*S.s,z=W*x+B;return (S.s-t)*sg(z)-t*sg(-z)+t}
+function fm(v){return (v<0?"−":"")+Math.abs(v).toFixed(2)}
+function ramp(u){u=Math.max(0,Math.min(1,u));
+ var a=[27,42,107],b=[46,196,182],c=[255,200,87],p=u<.5?[a,b,u*2]:[b,c,(u-.5)*2];
+ return p[0].map(function(v,i){return Math.round(v+(p[1][i]-v)*p[2])})}
+function maxd(a){var d=0;for(var i=0;i<=160;i++){var x=-4+8*i/160;d=Math.max(d,Math.abs(fa(x,a)-f0(x)))}return d}
+function draw(){
+ var svg=document.getElementById("sim"),N=121,M=Math.abs(S.s)+1,L=46,R=590,T=10,Bt=205;
+ function X(x){return L+(x+4)/8*(R-L)}function Y(y){return Bt-(y+M)/(2*M)*(Bt-T)}
+ var h="<line x1='"+L+"' y1='"+Y(0)+"' x2='"+R+"' y2='"+Y(0)+"' stroke='var(--border)'/>";
+ [-M,0,M].forEach(function(v){h+="<text x='4' y='"+(Y(v)+4)+"'>"+v.toFixed(1)+"</text>"});
+ [-4,-2,0,2,4].forEach(function(v){h+="<text x='"+(X(v)-6)+"' y='225'>"+v+"</text>"});
+ function P(fn,at){var pts=[];for(var i=0;i<N;i++){var x=-4+8*i/(N-1);pts.push(X(x).toFixed(1)+","+Y(fn(x)).toFixed(1))}return "<polyline fill='none' "+at+" points='"+pts.join(" ")+"'/>"}
+ h+=P(f0,"stroke='var(--amber)' stroke-width='2' stroke-dasharray='6 4'")+P(function(x){return fa(x,S.pos)},"stroke='var(--teal)' stroke-width='2.5'");
+ h+="<text x='"+(L+6)+"' y='22'>dashed: original neuron · solid: current point on path · x: input</text>";
+ svg.innerHTML=h;
+ var d=maxd(S.pos),ds=d<1e-9?d.toExponential(1):d.toFixed(3);
+ document.getElementById("simout").innerHTML="Max output change at α="+S.pos.toFixed(2)+": <b>"+ds+"</b> · bound |s|/2 = <b>"+(Math.abs(S.s)/2).toFixed(3)+"</b>"+(S.mode==="blend"?"":" · detour keeps the function constant (rounding error only)");
+ document.getElementById("pv").textContent=S.pos.toFixed(2);document.getElementById("sv").textContent=fm(S.s);
+ document.getElementById("m1").setAttribute("aria-pressed",S.mode==="blend");document.getElementById("m2").setAttribute("aria-pressed",S.mode!=="blend");
+ heat()}
+var cv=document.getElementById("hm"),cx=cv.getContext("2d"),G=null;
+function heat(){
+ var w=cv.width,h=cv.height,mx=Math.max(Math.abs(S.s)/2,1e-6),img=cx.createImageData(w,h);G=[];
+ for(var r=0;r<h;r++){var x=4-8*r/(h-1);for(var c=0;c<w;c++){var a=c/(w-1),v=Math.abs(fa(x,a)-f0(x)),k=ramp(v/mx),i=4*(r*w+c);
+  img.data[i]=k[0];img.data[i+1]=k[1];img.data[i+2]=k[2];img.data[i+3]=255}}
+ cx.putImageData(img,0,0);var px=S.pos*(w-1);cx.fillStyle="#ffffff";cx.fillRect(px-1,0,3,h);
+ var cb="";for(var j=0;j<60;j++){var q=ramp(j/59);cb+="<rect x='"+(40+j*9)+"' y='4' width='9' height='12' fill='rgb("+q+")'/>"}
+ cb+="<text x='40' y='30'>0</text><text x='300' y='30'>|s|/2 = "+mx.toFixed(2)+"</text><text x='540' y='30'>colour bar</text>";
+ document.getElementById("cb").innerHTML=cb;surf()}
+function probe(e){var r=cv.getBoundingClientRect(),a=(e.clientX-r.left)/r.width,x=4-8*(e.clientY-r.top)/r.height;
+ if(a<0||a>1||x<-4||x>4)return;
+ document.getElementById("hmout").textContent="α="+a.toFixed(2)+", x="+x.toFixed(2)+": |change| = "+Math.abs(fa(x,a)-f0(x)).toFixed(3)}
+cv.addEventListener("pointermove",probe);cv.addEventListener("pointerdown",probe);
+document.getElementById("pos").oninput=function(e){S.pos=+e.target.value;draw()};
+document.getElementById("sw").oninput=function(e){S.s=+e.target.value;draw()};
+document.getElementById("m1").onclick=function(){S.mode="blend";draw()};
+document.getElementById("m2").onclick=function(){S.mode="spare";draw()};
+document.getElementById("rst").onclick=function(){S={mode:"blend",pos:0.5,s:-11.14};document.getElementById("pos").value=0.5;document.getElementById("sw").value=-11.14;draw()};
+var SY=40,SP=50;
+function surf(){var c=document.getElementById("sf"),g=c.getContext("2d"),N=36,mx=Math.max(Math.abs(S.s)/2,1e-6),yw=SY*Math.PI/180,pt=SP*Math.PI/180,q=[],i,j;
+ function P(a,x,z){var X=(a-.5)*2,Yy=x/4,Xr=X*Math.cos(yw)-Yy*Math.sin(yw),D=X*Math.sin(yw)+Yy*Math.cos(yw);return [300+Xr*200,200-130*(z*.9*Math.cos(pt)+D*Math.sin(pt))+30,D*Math.cos(pt)-z*.9*Math.sin(pt)]}
+ function Z(a,x){return Math.abs(fa(x,a)-f0(x))/mx}
+ function V(i,j){var a=i/N,x=-4+8*j/N;return P(a,x,Z(a,x))}
+ g.clearRect(0,0,600,360);
+ for(i=0;i<N;i++)for(j=0;j<N;j++){var p=[V(i,j),V(i+1,j),V(i+1,j+1),V(i,j+1)];q.push([p,(p[0][2]+p[2][2])/2,Z((i+.5)/N,-4+8*(j+.5)/N)])}
+ q.sort(function(a,b){return b[1]-a[1]});
+ q.forEach(function(k){g.fillStyle="rgb("+ramp(k[2])+")";g.strokeStyle="rgba(255,255,255,.12)";g.beginPath();k[0].forEach(function(v,n){n?g.lineTo(v[0],v[1]):g.moveTo(v[0],v[1])});g.closePath();g.fill();g.stroke()});
+ var m=P(S.pos,0,Z(S.pos,0));g.fillStyle="#fff";g.beginPath();g.arc(m[0],m[1],5,0,7);g.fill()}
+document.getElementById("sy").oninput=function(e){SY=+e.target.value;surf()};
+document.getElementById("sp").oninput=function(e){SP=+e.target.value;surf()};
+var dn=null,sf=document.getElementById("sf");sf.onpointerdown=function(e){dn=[e.clientX,e.clientY];sf.setPointerCapture(e.pointerId)};sf.onpointerup=function(){dn=null};
+sf.onpointermove=function(e){if(!dn)return;SY=Math.max(-180,Math.min(180,SY+(e.clientX-dn[0])*.5));SP=Math.max(10,Math.min(90,SP-(e.clientY-dn[1])*.3));dn=[e.clientX,e.clientY];document.getElementById("sy").value=SY;document.getElementById("sp").value=SP;surf()};
+var gb=document.querySelectorAll("#guess button");
+Array.prototype.forEach.call(gb,function(b){b.onclick=function(){
+ var s0=S.s,m0=S.mode;S.mode="blend";var d=maxd(0.5);S.mode=m0;
+ var g=+b.getAttribute("data-g"),ok=g===1;
+ document.getElementById("reveal").innerHTML=(ok?"Right. ":"Not quite. ")+"With s="+fm(s0)+", the 50/50 blend changes the output by up to <b>"+d.toFixed(2)+"</b>, close to |s|/2="+(Math.abs(s0)/2).toFixed(2)+". At the midpoint the neuron’s weights, bias and output weight are all blended to zero, so its contribution is erased even though both ends compute the same function.";
+ S.pos=0.5;document.getElementById("pos").value=0.5;draw()}});
+draw();
+})();
+</script>
+</body>
+</html>
