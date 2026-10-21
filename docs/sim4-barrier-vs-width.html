@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Simulator 4: Does making the network wider make the problem disappear?</title>
+<style>
+:root{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--purple:#b39ddb;--border:#27415c;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f7fa;--panel:#fff;--text:#14212e;--muted:#4a5c70;--teal:#00796b;--coral:#c2412d;--amber:#9a6700;--purple:#5e35b1;--border:#c6d2de;color-scheme:light}}
+:root[data-theme="dark"]{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--purple:#b39ddb;--border:#27415c;color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Georgia,serif}
+main{max-width:760px;margin:0 auto;padding:18px 16px 50px}
+h1{font:700 1.5rem/1.25 system-ui,sans-serif;margin:.2em 0}
+h2{font:700 1.1rem system-ui,sans-serif;color:var(--teal);margin:0 0 .4em}
+.sec{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;margin:16px 0}
+.q{font:600 .78rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--amber)}
+.tag{display:inline-block;font:700 .7rem system-ui,sans-serif;border:1px solid currentColor;border-radius:6px;padding:1px 6px;margin-right:6px;color:var(--teal)}
+.muted{color:var(--muted);font-size:.88rem}
+.ctl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;font:.9rem system-ui,sans-serif}
+button{font:600 .82rem system-ui,sans-serif;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-height:42px;cursor:pointer}
+button[aria-pressed="true"]{border-color:var(--teal);color:var(--teal)}
+.out{font:.9rem/1.5 system-ui,sans-serif;background:var(--bg);border-radius:8px;padding:8px 12px;margin:8px 0}
+svg{width:100%;height:auto;display:block}svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+dl{margin:0;font-size:.92rem}dt{font:700 .85rem system-ui,sans-serif;color:var(--amber);margin-top:.6em}dd{margin:0}
+a{color:var(--teal)}
+</style></head><body><main>
+<p class="q">Simulator 4 of a series · interactive</p>
+<h1>Does just making the network wider make the merging problem go away?</h1>
+<p>Prior work (Entezari et al.; Ainsworth et al.) reports that permutation matching works well on wide networks but leaves a barrier on thin ones. This page shows what happens to the barrier between two independently trained networks as width grows, on one task (coffee roasting), with and without the sign-flip fix.</p>
+<p class="muted"><span class="tag">PAPER</span>Medians over independent pairs on the coffee-roasting task (Study 1, Appendix A Table 8). Barrier = training-error points above the straight line between the two networks. Axis starts at zero.</p>
+
+<section class="sec"><p class="q">Step 1 · Predict</p>
+<h2>With sign-flip-aware matching, is the barrier removed at every width?</h2>
+<div class="ctl" id="guess"><button data-g="0">Yes, at every width</button><button data-g="1">Only at small widths</button><button data-g="2">At no width</button></div>
+<div class="out" id="rev" aria-live="polite">Pick one, then explore the graph.</div></section>
+
+<section class="sec"><p class="q">Step 2 · Explore</p>
+<h2>Barrier vs hidden width</h2>
+<div class="ctl" id="tog"></div>
+<svg id="ch" viewBox="0 0 600 300" role="img" aria-label="Training-error barrier versus hidden width for several alignment methods"></svg>
+<div class="ctl" id="wsel"></div>
+<div class="out" id="out" aria-live="polite"></div>
+<p class="muted">Bars: 95% bootstrap interval over pairs (11 pairs at width 3, 20 otherwise). Dashed line: ε = 0.5 points, the threshold for “removed”. Width axis is log-spaced. Brute-force (exhaustive) series exist only where the search was run: widths 3–8 (permutations), 3–6 (with flips).</p></section>
+
+<section class="sec"><h2>Expert notes</h2>
+<dl>
+<dt>Modes</dt><dd>none: no alignment. wm: weight matching over permutations (Hungarian). wm_sign: matching with sign flips, objective Σ|u<sub>i</sub><sup>A⊤</sup>u<sub>π(i)</sub><sup>B</sup>|. bf_perm / bf_sign: brute force over permutations / permutations and flips, chosen by midpoint loss.</dd>
+<dt>Reading the result</dt><dd>With flips, the barrier is removed at widths 3 and 4 (upper quartiles 0.04 and 0.11) but not from width 6 to 64 (upper quartiles 0.77–1.30). Flips still lower the barrier at every width.</dd>
+<dt>Caveat from the paper</dt><dd>At widths 4, 6 and 8 nearly every network has two units on almost the same line, so near-symmetries outside the finite group may remain; the exhaustive search does not cover them.</dd>
+<dt>Scope</dt><dd>One task, one hidden layer, sigmoid. Study 1 rules were recorded in a private notebook (Section 3).</dd></dl>
+<p class="muted"><a href="explainer.html">Full interactive paper page</a> · <a href="index.html">All simulators</a> · github.com/MrigeshLakhanpal/sign-flips-lmc</p></section>
+</main>
+<script>
+(function(){
+var W=[3,4,6,8,16,32,64];
+/* median, lo, hi (Table 8); null where not run */
+var D={
+none:{n:"No alignment",c:"var(--coral)",m:"s",d:"2 4",v:[[20.05,19.90,21.50],[20.13,19.97,20.44],[20.23,17.83,20.33],[20.09,18.85,20.24],[14.38,8.12,19.45],[11.10,9.49,13.08],[9.29,7.67,15.60]]},
+wm:{n:"Weight matching (wm)",c:"var(--amber)",m:"c",d:"",v:[[17.95,16.07,21.05],[7.77,3.43,14.30],[5.55,1.89,6.57],[2.68,1.46,5.97],[1.23,.91,1.68],[1.54,.83,2.03],[1.10,.86,1.42]]},
+wm_sign:{n:"wm + sign flips",c:"var(--teal)",m:"d",d:"",v:[[0,0,.05],[.09,.04,.11],[.84,.34,1.17],[1.02,.54,1.24],[.46,.31,.79],[.39,.26,.68],[.54,.31,.72]]},
+bf_perm:{n:"Brute force, permutations",c:"var(--purple)",m:"t",d:"6 3",v:[[17.88,15.16,20.22],[7.77,3.43,15.39],[4.68,1.71,6.15],[1.94,1.30,2.98],null,null,null]},
+bf_sign:{n:"Brute force, perms + flips",c:"var(--text)",m:"x",d:"6 3",v:[[0,0,.05],[.08,.04,.10],[.39,.21,.48],null,null,null,null]}};
+var on={none:1,wm:1,wm_sign:1,bf_perm:0,bf_sign:0},sw=0;
+function X(w){return 50+(Math.log2(w)-Math.log2(3))/(6-Math.log2(3))*(530)}
+function Y(v){return 260-v/25*240}
+function mk(k,x,y){var c=D[k].c,m=D[k].m;
+ if(m==="s")return "<rect x='"+(x-4)+"' y='"+(y-4)+"' width='8' height='8' fill='"+c+"'/>";
+ if(m==="c")return "<circle cx='"+x+"' cy='"+y+"' r='4.5' fill='"+c+"'/>";
+ if(m==="d")return "<polygon points='"+x+","+(y-6)+" "+(x+6)+","+y+" "+x+","+(y+6)+" "+(x-6)+","+y+"' fill='"+c+"'/>";
+ if(m==="t")return "<polygon points='"+x+","+(y-6)+" "+(x+6)+","+(y+5)+" "+(x-6)+","+(y+5)+"' fill='none' stroke='"+c+"' stroke-width='2'/>";
+ return "<path d='M"+(x-5)+","+(y-5)+"L"+(x+5)+","+(y+5)+"M"+(x+5)+","+(y-5)+"L"+(x-5)+","+(y+5)+"' stroke='"+c+"' stroke-width='2'/>"}
+function draw(){
+ var h="",t;
+ [0,5,10,15,20,25].forEach(function(v){h+="<line x1='50' y1='"+Y(v)+"' x2='580' y2='"+Y(v)+"' stroke='var(--border)'/><text x='22' y='"+(Y(v)+4)+"'>"+v+"</text>"});
+ W.forEach(function(w,i){h+="<text x='"+(X(w)-6)+"' y='282'>"+w+"</text>"});
+ h+="<text x='4' y='12'>points</text><text x='300' y='298'>hidden width</text>";
+ h+="<line x1='50' y1='"+Y(.5)+"' x2='580' y2='"+Y(.5)+"' stroke='var(--text)' stroke-dasharray='5 4'/><text x='540' y='"+(Y(.5)-4)+"'>ε</text>";
+ h+="<line x1='"+X(W[sw])+"' y1='20' x2='"+X(W[sw])+"' y2='260' stroke='var(--amber)' stroke-opacity='.5'/>";
+ Object.keys(D).forEach(function(k){if(!on[k])return;var pts=[];
+  D[k].v.forEach(function(v,i){if(v)pts.push(X(W[i]).toFixed(1)+","+Y(v[0]).toFixed(1))});
+  h+="<polyline fill='none' stroke='"+D[k].c+"' stroke-width='2' stroke-dasharray='"+D[k].d+"' points='"+pts.join(" ")+"'/>";
+  D[k].v.forEach(function(v,i){if(!v)return;var x=X(W[i]);h+="<line x1='"+x+"' y1='"+Y(v[1])+"' x2='"+x+"' y2='"+Y(v[2])+"' stroke='"+D[k].c+"' stroke-width='1.5'/>"+mk(k,x,Y(v[0]))})});
+ document.getElementById("ch").innerHTML=h;
+ var o="Width <b>"+W[sw]+"</b> (median [interval], points): ";
+ o+=Object.keys(D).map(function(k){var v=D[k].v[sw];return D[k].n+": "+(v?"<b>"+v[0].toFixed(2)+"</b> ["+v[1].toFixed(2)+", "+v[2].toFixed(2)+"]":"not run")}).join(" · ");
+ document.getElementById("out").innerHTML=o;
+ Array.prototype.forEach.call(document.querySelectorAll("#tog button"),function(b){b.setAttribute("aria-pressed",!!on[b.getAttribute("data-k")])});
+ Array.prototype.forEach.call(document.querySelectorAll("#wsel button"),function(b,i){b.setAttribute("aria-pressed",i===sw)})}
+var tg=document.getElementById("tog");
+Object.keys(D).forEach(function(k){var b=document.createElement("button");b.setAttribute("data-k",k);b.textContent=D[k].n;b.onclick=function(){on[k]=on[k]?0:1;draw()};tg.appendChild(b)});
+var ws=document.getElementById("wsel");
+W.forEach(function(w,i){var b=document.createElement("button");b.textContent="width "+w;b.onclick=function(){sw=i;draw()};ws.appendChild(b)});
+Array.prototype.forEach.call(document.querySelectorAll("#guess button"),function(b){b.onclick=function(){var g=+b.getAttribute("data-g");
+ document.getElementById("rev").textContent=(g===1?"Right. ":"Not quite. ")+"With flips the barrier is removed at widths 3 and 4, but not from width 6 to 64 (the paper’s criterion is an upper quartile at most ε = 0.5; here 0.77–1.30, medians 0.39–1.02). Flips still lower the barrier at every width, and the paper notes near-symmetries outside the finite group at wider widths."}});
+draw();
+})();
+</script></body></html>
