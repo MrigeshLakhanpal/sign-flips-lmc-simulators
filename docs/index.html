@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sign flips and linear mode connectivity: interactive simulators</title>
+<style>
+:root{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--amber:#ffc857;--border:#27415c;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f7fa;--panel:#fff;--text:#14212e;--muted:#4a5c70;--teal:#00796b;--amber:#9a6700;--border:#c6d2de;color-scheme:light}}
+:root[data-theme="dark"]{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--amber:#ffc857;--border:#27415c;color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Georgia,serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 50px}
+h1{font:700 1.5rem/1.25 system-ui,sans-serif}
+a.card{display:block;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin:12px 0;color:var(--text);text-decoration:none}
+a.card b{font:700 1.05rem system-ui,sans-serif;color:var(--teal);display:block}
+.muted{color:var(--muted);font-size:.9rem}a{color:var(--teal)}
+</style></head><body><main>
+<h1>Four questions about merging neural networks, as simulators</h1>
+<p class="muted">Interactive companions to Lakhanpal (2026), “A Missing Sign Symmetry Accounts for the Linear-Mode-Connectivity Barrier in Minimal-Width Sigmoid Networks” (preprint v2). Simulators 1 and 2 are labelled toy models; 3 and 4 use only the paper’s tables.</p>
+<a class="card" href="sim1-why-averaging-fails.html"><b>1. If two networks compute the same function, why can’t you average them?</b>Prediction game, flip simulator, heat map.</a>
+<a class="card" href="sim2-loss-landscape.html"><b>2. If two solutions are secretly the same, why is there a hill between them?</b>Rotatable toy loss landscape.</a>
+<a class="card" href="sim3-where-claim-fails.html"><b>3. When does “a missing symmetry explains it” stop being enough?</b>Heat map of five tasks by three thresholds.</a>
+<a class="card" href="sim4-barrier-vs-width.html"><b>4. Does making the network wider make the problem go away?</b>Barrier versus width graph.</a>
+<a class="card" href="explainer.html"><b>All-in-one explainer</b>The full paper walkthrough on one page.</a>
+<p class="muted">Code and results: <a href="https://github.com/MrigeshLakhanpal/sign-flips-lmc">github.com/MrigeshLakhanpal/sign-flips-lmc</a> · doi:10.5281/zenodo.23314245</p>
+</main></body></html>

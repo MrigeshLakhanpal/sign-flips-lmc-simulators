@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sign flips and the linear-mode-connectivity barrier: an interactive explainer</title>
+<style>
+:root{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--border:#27415c;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f7fa;--panel:#fff;--text:#14212e;--muted:#4a5c70;--teal:#00796b;--coral:#c2412d;--amber:#9a6700;--border:#c6d2de;color-scheme:light}}
+:root[data-theme="dark"]{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--border:#27415c;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Georgia,"Times New Roman",serif}
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+h1{font:700 1.7rem/1.25 system-ui,sans-serif;margin:.3em 0}
+h2{font:700 1.25rem/1.3 system-ui,sans-serif;margin:0 0 .4em;color:var(--teal)}
+.sec{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;margin:18px 0}
+.q{font:600 .8rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--amber)}
+.tag{display:inline-block;font:700 .7rem system-ui,sans-serif;border:1px solid currentColor;border-radius:6px;padding:1px 6px;margin-right:6px}
+.toy{color:var(--amber)}.fact{color:var(--teal)}.expl{color:var(--coral)}
+.muted{color:var(--muted);font-size:.9rem}
+.eq{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin:10px 0;font:1rem/1.6 "Cambria Math",Georgia,serif;overflow-x:auto;white-space:nowrap}
+.ctl{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:10px 0;font:.9rem system-ui,sans-serif}
+.ctl label{display:flex;flex-direction:column;gap:2px;min-width:140px;flex:1}
+input[type=range]{width:100%}
+button{font:600 .85rem system-ui,sans-serif;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 12px;min-height:40px;cursor:pointer}
+button[aria-pressed="true"]{border-color:var(--teal);color:var(--teal)}
+.out{font:.9rem/1.5 system-ui,sans-serif;background:var(--bg);border-radius:8px;padding:8px 12px;margin:8px 0}
+svg{width:100%;height:auto;display:block}
+svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font:.82rem system-ui,sans-serif}
+th,td{border-bottom:1px solid var(--border);padding:6px 6px;text-align:left;white-space:nowrap}
+tr.bad td{color:var(--coral);font-weight:700}
+.bars{font:.82rem system-ui,sans-serif}
+.row{margin:10px 0}
+.bar{height:20px;border-radius:4px;margin:3px 0;display:flex;align-items:center;padding-left:6px;color:#06121f;font-weight:700;font-size:.75rem;min-width:46px;white-space:nowrap}
+.b1{background:var(--coral)}.b2{background:var(--teal)}
+ul{padding-left:1.2em}li{margin:.3em 0}
+a{color:var(--teal)}
+</style>
+</head>
+<body>
+<main>
+<p class="q">Interactive explainer · Lakhanpal (2026), preprint v2</p>
+<h1>When permutation matching fails, is the search broken or is a symmetry missing?</h1>
+<p>Entezari et al. and Ainsworth et al. found that aligning hidden units by permutation does not remove the straight-line loss barrier in thin networks. Ainsworth et al. left open whether matching fails or “some form of invariance other than permutation symmetries” is at play. This paper tests that for one-hidden-layer <b>sigmoid</b> networks, where the complete exact symmetry group (permutations and sign flips, 2<sup>h</sup>h! elements at width h) is small enough to search exhaustively.</p>
+<p class="muted"><span class="tag fact">PAPER</span>values come from the paper’s tables. <span class="tag toy">TOY</span>a simplified simulation for intuition, not a result. <span class="tag expl">EXPLORATORY</span>decided after seeing results. Scope: sigmoid, one hidden layer, 2-D convex-polygon tasks. ReLU is not addressed.</p>
+
+<section class="sec" id="mechanism">
+<p class="q">Mechanism · Eq. 3, Lemma 1</p>
+<h2>What does a sign flip do to a straight-line blend?</h2>
+<p><span class="tag toy">ILLUSTRATIVE TOY MODEL</span> One sigmoid unit, 1-D input, with toy weights w=2, b=0.5, c=0. Because σ(−z)=1−σ(z), flipping a unit leaves the function unchanged:</p>
+<div class="eq">(w, b, s, c) ↦ (−w, −b, −s, c+s)</div>
+<p>Choose a path from the unit to its flipped copy and compare its function with the original. The default s=−11.14 is the output weight of the paper’s seed-1 unit; everything else here is toy.</p>
+<div class="ctl">
+<button id="m1" aria-pressed="true">Straight blend (width 3)</button>
+<button id="m2" aria-pressed="false">Spare-neuron path (Lemma 1)</button>
+</div>
+<div class="ctl">
+<label>Position along path: <b id="pv">0.50</b><input id="pos" type="range" min="0" max="1" step="0.01" value="0.5" aria-label="Position along path"></label>
+<label>Output weight s: <b id="sv">−11.14</b><input id="sw" type="range" min="-12" max="12" step="0.01" value="-11.14" aria-label="Output weight s"></label>
+<button id="rst">Reset</button>
+</div>
+<svg id="sim" viewBox="0 0 600 260" role="img" aria-label="Unit output versus input for the original unit and the current point on the path"></svg>
+<div class="out" id="simout" aria-live="polite"></div>
+<p class="muted">Blend at α: (w,b,s) scaled by (1−2α) and c+αs, so at α=½ the unit’s weights, bias and output weight are all zero. The change in its contribution is −s(σ(z)−½), at most |s|/2. Lemma 1’s spare path instead moves output weight to a unit with parameters (−w,−b), keeping the function exactly constant. Source: Section 4.2, Appendix B (Figure 4). The paper reports 5.57 and 20.95% training error for its trained network; this toy does not reproduce those.</p>
+</section>
+
+<section class="sec" id="evidence">
+<p class="q">Evidence · Study 2, Table 4 (2% inclusion)</p>
+<h2>How big is the barrier with and without sign flips?</h2>
+<p><span class="tag fact">PAPER</span> Orange-red: median barrier left by the best permutation alone, in pairs that needed a flip. Teal: upper quartile of the barrier left by the exhaustive search over permutations and flips, over all pairs. Training-error points, axis from 0 to 25, ε = 0.5.</p>
+<div class="bars" id="bars"></div>
+<div class="scroll"><table id="t4"></table></div>
+<p class="muted">Different statistics (median in flip pairs vs upper quartile in all pairs), as pre-registered in H4a/H4b. Coffee includes Study 1’s 11 pairs, so it is a re-test, not an independent replication. Source: Table 4, Section 5.1.</p>
+</section>
+
+<section class="sec" id="sens">
+<p class="q">Sensitivity · Tables 5 and 6</p>
+<h2>Where does the claim fail?</h2>
+<p><span class="tag fact">PAPER</span> Minimal width h* depends on the inclusion tolerance. Pick one.</p>
+<div class="ctl" id="thr"></div>
+<div class="scroll"><table id="t5"></table></div>
+<div class="out" id="t6"></div>
+<p class="muted">Failing rows are marked ✗ (upper quartile above ε = 0.5). The same-line split was decided after seeing results. Source: Section 5.1–5.2, Tables 5–6.</p>
+</section>
+
+<section class="sec" id="h7">
+<p class="q">Negative result · H7</p>
+<h2>Do the weights predict how large the barrier is?</h2>
+<p><span class="tag fact">PAPER</span> Spearman ρ between M = Σ|sᵢ|/2 over flipped units and the barrier left without flips (129 pairs), with 95% bootstrap intervals.</p>
+<svg id="forest" viewBox="0 0 600 170" role="img" aria-label="Interval plot of three correlations"></svg>
+<p class="muted">Circle: pre-registered test, error barrier, ρ = 0.007 [−0.18, 0.19], not supported; the error barrier saturates near each task’s positive rate. Diamonds: <span class="tag expl">EXPLORATORY</span> loss re-tests (raw ρ = 0.86 [0.79, 0.90]; calibrated ρ = 0.65 [0.54, 0.75]). Raw loss grows with weight scale, so part of that correlation may be scale. Source: Section 5.4.</p>
+</section>
+
+<section class="sec" id="scope">
+<h2>What this supports, and what it does not establish</h2>
+<ul>
+<li><b>Supports:</b> for these sigmoid tasks at minimal width, a missing sign symmetry, not a failed search, accounts for the barrier left by permutations (all pre-registered Study 2 tests passed on five tasks at 2%).</li>
+<li><b>Supports (exploratory):</b> all 157 same-line pairs at 2% kept at most 0.21 points; the 8 different-line pairs kept 2.38–9.58.</li>
+<li><b>Does not establish:</b> anything about ReLU (no sign flip; open), depth, real data, or tanh (not tested).</li>
+<li><b>Fails:</b> the claim fails for the pentagon at 1% and the hexagon at 5%. Minimal width is operational, tied to error tolerance. The hexagon’s h* = 4 at 2% is an upper bound.</li>
+<li><b>Not shown here:</b> pair-level curves; model files are not released. Barriers are on a 25-point grid, so they are lower bounds.</li>
+</ul>
+</section>
+
+<section class="sec" id="ledger">
+<h2>Claim ledger</h2>
+<div class="scroll"><table>
+<tr><th>ID</th><th>Claim</th><th>Class</th><th>Source</th></tr>
+<tr><td>C1</td><td>Flip identity σ(−z)=1−σ(z) gives Eq. 3</td><td>PAPER_FACT</td><td>Sec. 2, Eq. 3</td></tr>
+<tr><td>C2</td><td>Blend midpoint shifts the logit by up to |s|/2</td><td>DERIVED_RESULT</td><td>Sec. 4.2</td></tr>
+<tr><td>C3</td><td>H4a, H4b, H4c, H5 hold on all five tasks (2%)</td><td>PAPER_FACT</td><td>Sec. 5.1, Table 4</td></tr>
+<tr><td>C4</td><td>Same-line pairs close under the exact group</td><td>PAPER_FACT (exploratory)</td><td>Sec. 5.2, Table 6</td></tr>
+<tr><td>C5</td><td>Error-barrier size not predicted by weights</td><td>PAPER_FACT</td><td>Sec. 5.4</td></tr>
+<tr><td>C6</td><td>Simulator above illustrates C2 only</td><td>ILLUSTRATIVE_TOY_MODEL</td><td>this page</td></tr>
+<tr><td>C7</td><td>Does the effect occur in ReLU nets?</td><td>OPEN_QUESTION</td><td>Sec. 9</td></tr>
+</table></div>
+<p class="muted">Inspect, don’t just trust: code and results at github.com/MrigeshLakhanpal/sign-flips-lmc (Zenodo doi:10.5281/zenodo.23314245). Pre-registration commits 349aa3a, 4c07b33, b7b5669, a09afcf.</p>
+</section>
+</main>
+<script>
+(function(){
+var NS="http://www.w3.org/2000/svg";
+function sg(z){return 1/(1+Math.exp(-z))}
+function fmt(v){return (v<0?"−":"")+Math.abs(v).toFixed(2)}
+/* simulator */
+var S={mode:"blend",pos:0.5,s:-11.14},W=2,B=0.5;
+function f0(x){return S.s*sg(W*x+B)}
+function fp(x){
+ if(S.mode==="blend"){var k=1-2*S.pos;return k*S.s*sg(k*(W*x+B))+S.pos*S.s}
+ var t=S.pos*S.s,z=W*x+B;return (S.s-t)*sg(z)-t*sg(-z)+t}
+function draw(){
+ var svg=document.getElementById("sim"),xs=[],i,N=121,M=Math.abs(S.s)+1,L=46,R=590,T=14,Bt=230;
+ for(i=0;i<N;i++)xs.push(-4+8*i/(N-1));
+ function X(x){return L+(x+4)/8*(R-L)}
+ function Y(y){return Bt-(y+M)/(2*M)*(Bt-T)}
+ var h="<line x1='"+L+"' y1='"+Y(0)+"' x2='"+R+"' y2='"+Y(0)+"' stroke='var(--border)'/>";
+ [-M,0,M].forEach(function(v){h+="<text x='4' y='"+(Y(v)+4)+"'>"+v.toFixed(1)+"</text>"});
+ [-4,-2,0,2,4].forEach(function(v){h+="<text x='"+(X(v)-6)+"' y='250'>"+v+"</text>"});
+ function path(fn,attr){return "<polyline fill='none' "+attr+" points='"+xs.map(function(x){return X(x).toFixed(1)+","+Y(fn(x)).toFixed(1)}).join(" ")+"'/>"}
+ h+=path(f0,"stroke='var(--amber)' stroke-width='2' stroke-dasharray='6 4'");
+ h+=path(fp,"stroke='var(--teal)' stroke-width='2.5'");
+ h+="<text x='"+(L+6)+"' y='24'>dashed amber: original unit · solid teal: current path point · y: unit output s·σ(wx+b)+c · x: input</text>";
+ svg.innerHTML=h;
+ var d=0;xs.forEach(function(x){d=Math.max(d,Math.abs(fp(x)-f0(x)))});
+ var ds=d<1e-9?d.toExponential(1):d.toFixed(3);
+ document.getElementById("simout").innerHTML="Max |change in output| over x∈[−4,4]: <b>"+ds+"</b> · bound |s|/2 = <b>"+(Math.abs(S.s)/2).toFixed(3)+"</b>"+
+  (S.mode==="blend"?"":" · the function stays constant along this path (rounding error only).");
+ document.getElementById("pv").textContent=S.pos.toFixed(2);
+ document.getElementById("sv").textContent=fmt(S.s);
+ document.getElementById("m1").setAttribute("aria-pressed",S.mode==="blend");
+ document.getElementById("m2").setAttribute("aria-pressed",S.mode!=="blend");
+}
+document.getElementById("pos").oninput=function(e){S.pos=+e.target.value;draw()};
+document.getElementById("sw").oninput=function(e){S.s=+e.target.value;draw()};
+document.getElementById("m1").onclick=function(){S.mode="blend";draw()};
+document.getElementById("m2").onclick=function(){S.mode="spare";draw()};
+document.getElementById("rst").onclick=function(){S={mode:"blend",pos:0.5,s:-11.14};document.getElementById("pos").value=0.5;document.getElementById("sw").value=-11.14;draw()};
+draw();
+/* Table 4 */
+var T4=[["Coffee (triangle)",3,36,"36/36","0.02 / 0.05 / 0.17",19.98,0.05,32],["Triangle",3,47,"47/47","0.03 / 0.06 / 0.13",21.65,0.06,36],["Quadrilateral",4,32,"30/32","0.04 / 0.07 / 9.58",17.53,0.07,26],["Pentagon",4,21,"21/21","0.05 / 0.07 / 0.15",12.38,0.07,14],["Hexagon",4,29,"23/29","0.06 / 0.13 / 4.81",9.95,0.13,21]];
+var bh="",th="<tr><th>Task</th><th>h*</th><th>Pairs</th><th>Same lines</th><th>Residual med / UQ / max</th><th>Flip pairs</th></tr>";
+T4.forEach(function(r){
+ bh+="<div class='row'><div>"+r[0]+" (h*="+r[1]+")</div><div class='bar b1' style='width:"+(r[5]/25*100)+"%'>perm only: "+r[5].toFixed(2)+"</div><div class='bar b2' style='width:"+Math.max(r[6]/25*100,0)+"%'>sign-aware: "+r[6].toFixed(2)+"</div></div>";
+ th+="<tr><td>"+r[0]+"</td><td>"+r[1]+"</td><td>"+r[2]+"</td><td>"+r[3]+"</td><td>"+r[4]+"</td><td>"+r[7]+"</td></tr>"});
+document.getElementById("bars").innerHTML=bh;document.getElementById("t4").innerHTML=th;
+/* Tables 5, 6 */
+var T5={1:[["Coffee (triangle)",3,28,"28/28",0.04],["Triangle",3,46,"46/46",0.06],["Quadrilateral",4,28,"28/28",0.07],["Pentagon",5,18,"11/18",3.26],["Hexagon",6,30,"22/30",0.09]],
+2:[["Coffee (triangle)",3,36,"36/36",0.05],["Triangle",3,47,"47/47",0.06],["Quadrilateral",4,32,"30/32",0.07],["Pentagon",4,21,"21/21",0.07],["Hexagon",4,29,"23/29",0.13]],
+5:[["Coffee (triangle)",3,38,"34/38",0.05],["Triangle",3,47,"47/47",0.06],["Quadrilateral",3,48,"44/48",0.22],["Pentagon",3,46,"46/46",0.18],["Hexagon",4,48,"18/48",2.58]]};
+var T6={1:"Same lines: 135 pairs, median 0.03, max 0.20, 0 above ε. Different lines: 15 pairs, median 0.17, range 0.00–4.27.",
+2:"Same lines: 157 pairs, median 0.03, max 0.21, 0 above ε. Different lines: 8 pairs, median 3.74, range 2.38–9.58.",
+5:"Same lines: 189 pairs, median 0.06, max 0.74, 3 above ε. Different lines: 38 pairs, median 1.06, range 0.02–6.06."};
+function show(k){
+ var h="<tr><th>Task</th><th>h*</th><th>Pairs</th><th>Same lines</th><th>Residual UQ</th><th>H4a</th></tr>";
+ T5[k].forEach(function(r){var bad=r[4]>0.5;h+="<tr"+(bad?" class='bad'":"")+"><td>"+r[0]+"</td><td>"+r[1]+"</td><td>"+r[2]+"</td><td>"+r[3]+"</td><td>"+r[4].toFixed(2)+"</td><td>"+(bad?"✗ no":"✓ yes")+"</td></tr>"});
+ document.getElementById("t5").innerHTML=h;document.getElementById("t6").textContent=T6[k]+" (pooled over five tasks; Table 6)";
+ [1,2,5].forEach(function(v){document.getElementById("b"+v).setAttribute("aria-pressed",v==k)})}
+var thr=document.getElementById("thr");
+[1,2,5].forEach(function(v){var b=document.createElement("button");b.id="b"+v;b.textContent=v+"% inclusion";b.onclick=function(){show(v)};thr.appendChild(b)});
+show(2);
+/* H7 forest */
+var rows=[["error barrier (pre-registered)",0.007,-0.18,0.19,0],["raw loss (exploratory)",0.86,0.79,0.90,1],["calibrated loss (exploratory)",0.65,0.54,0.75,1]];
+function FX(v){return 200+(v+0.4)/1.4*380}
+var fh="<line x1='"+FX(0)+"' y1='10' x2='"+FX(0)+"' y2='130' stroke='var(--border)' stroke-dasharray='4 3'/>";
+[-0.4,0,0.4,0.8,1].forEach(function(v){fh+="<text x='"+(FX(v)-8)+"' y='152'>"+v+"</text>"});
+rows.forEach(function(r,i){var y=30+i*40;
+ fh+="<text x='4' y='"+(y+4)+"'>"+r[0]+"</text><line x1='"+FX(r[2])+"' y1='"+y+"' x2='"+FX(r[3])+"' y2='"+y+"' stroke='var(--teal)' stroke-width='2'/>";
+ fh+=r[4]?"<polygon points='"+FX(r[1])+","+(y-7)+" "+(FX(r[1])+7)+","+y+" "+FX(r[1])+","+(y+7)+" "+(FX(r[1])-7)+","+y+"' fill='var(--amber)'/>":"<circle cx='"+FX(r[1])+"' cy='"+y+"' r='6' fill='var(--coral)'/>"});
+document.getElementById("forest").innerHTML=fh;
+})();
+</script>
+</body>
+</html>
