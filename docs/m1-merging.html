@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Why is merging models so hard? · Weights ≠ Function</title>
+<style>
+:root{--fg:#f2f5f8;--mu:#8a96a3;--or:#ff6a2b;--cy:#4fd8ff;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;color:var(--fg);background:#000 linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px;font:15px/1.6 system-ui,sans-serif}
+main{max-width:920px;margin:0 auto;padding:18px 14px 50px}
+.k{font:600 .72rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mu)}
+h1{font:700 clamp(1.5rem,5vw,2.3rem)/1.15 system-ui,sans-serif;margin:.3em 0 .2em;letter-spacing:-.01em}
+.sub{color:var(--mu);max-width:62ch}
+#stage{position:relative;width:100%;aspect-ratio:4/3;max-height:72vh;margin:14px 0 6px;border:1px solid #2a323b;background:#000;overflow:hidden}
+#c{width:100%;height:100%;display:block;touch-action:none}
+#hud{position:absolute;left:10px;top:8px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#cfd8e1;pointer-events:none;text-shadow:0 0 6px #000}
+.l{position:absolute;font:11px ui-monospace,Menlo,Consolas,monospace;color:#aab4be;pointer-events:none;transform:translate(6px,-50%);white-space:nowrap}
+#tel{width:100%;height:84px;display:block;border:1px solid #2a323b;border-top:0;background:#000}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}
+button{font:600 .8rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:var(--fg);background:#000;border:1px solid #3a444f;padding:0 14px;min-height:44px;cursor:pointer}
+button[aria-pressed="true"]{border-color:#fff;background:#10161c}
+input[type=range]{flex:1;min-width:160px;accent-color:#fff}
+.box{border-top:1px solid #2a323b;margin-top:22px;padding-top:12px}
+h2{font:700 .78rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);margin:0 0 6px}
+.mu{color:var(--mu);font-size:.88rem}code{font-family:ui-monospace,Menlo,Consolas,monospace;color:#fff}
+a{color:var(--cy)}
+#x{display:none;position:absolute;right:8px;top:8px;z-index:3}
+body.cine .ui{display:none}body.cine main{padding:0;max-width:none}
+body.cine #stage{position:fixed;inset:0;max-height:none;aspect-ratio:auto;margin:0;z-index:5}
+body.cine #x{display:block}
+</style></head><body><main>
+<p class="k ui">Weights ≠ Function · 1 of a series</p>
+<h1 class="ui">Why is merging models so hard?</h1>
+<p class="sub ui">Two networks can compute exactly the same function and still sit far apart in weight space. Average their weights and you can erase what they know. Smallest case solved exactly: one hidden layer, sigmoid units.</p>
+<div id="stage"><canvas id="c" aria-label="3D weight-space view: straight line between a unit and its mirror twin passes through the zero point; detour avoids it"></canvas><div id="hud"></div><button id="x" aria-label="Exit cinematic mode">EXIT</button>
+<span class="l" id="lA">network A</span><span class="l" id="lB">mirror twin B</span><span class="l" id="lO">ERASURE POINT w = b = s = 0</span><span class="l" id="lx">w</span><span class="l" id="ly">s</span><span class="l" id="lz">s_spare</span></div>
+<canvas id="tel" class="ui" aria-label="Output change along each path"></canvas>
+<div class="row ui"><button id="bs" aria-pressed="true">STRAIGHT LINE</button><button id="bd" aria-pressed="false">DETOUR VIA SPARE UNIT</button><button id="bp" aria-pressed="false">PLAY</button><button id="bc">CINEMATIC</button></div>
+<div class="row ui"><span class="mu">path position</span><input id="t" type="range" min="0" max="1000" value="500" aria-label="Position along path"></div>
+<p class="mu ui">Drag to rotate. Axes: the unit’s input weight w, its output weight s, and the spare unit’s output weight. Every faint line joins a unit to its mirror twin; <b>every straight line passes through the same point, where the unit’s weights are zero</b>. The strip below the view plots how much the function changes along each path (orange: straight, cyan: detour; scale 0 to |s|/2).</p>
+<section class="box ui"><h2>Technical statement</h2>
+<p class="mu">For <code>f(x)=Σ sᵢσ(wᵢᵀx+bᵢ)+c</code>, σ(−z)=1−σ(z) gives the exact symmetry <code>(w,b,s,c) ↦ (−w,−b,−s,c+s)</code>. On the straight blend to a unit’s flipped copy, (w,b,s) all vanish at the midpoint and its logit contribution changes by −s(σ(z)−½), up to |s|/2. Permutation matching cannot undo a flip. Lemma 1: a spare unit with input (−w,−b) and output weight 0 lets output weight move across with the function exactly constant (<code>(s−t)σ(z) − tσ(−z) + (c+t) = sσ(z)+c</code>). The detour drawn here is that construction, projected onto (wᵢ, sᵢ, s_spare); its input-copy steps do not move the point in this projection.</p>
+<p class="mu"><b>Evidence label:</b> geometry and numbers are computed exactly from Eq. 3 and Lemma 1 for one <b>toy unit</b> (w=2, b=0.5, s=−11.14); this is not an experiment. A flat path existing does not show a zero straight-line barrier. Scope: one hidden layer, sigmoid; ReLU has no sign flip. Source: Lakhanpal (2026), preprint v2, Sec. 4.2, App. B.</p>
+<p class="mu"><a href="index.html">All simulators</a> · <a href="https://github.com/MrigeshLakhanpal/sign-flips-lmc">Preprint, code, pre-registration</a></p></section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+var S=-11.14,W=2,B=.5,AS=Math.abs(S),sg=function(z){return 1/(1+Math.exp(-z))};
+var KS=[[W,B,S,0,0,0,0],[-W,-B,-S,0,0,0,S]];
+var KD=[[W,B,S,0,0,0,0],[W,B,S,-W,-B,0,0],[W,B,0,-W,-B,-S,S],[-W,-B,0,-W,-B,-S,S],[-W,-B,-S,-W,-B,0,S]];
+var STEP=["M1 · copy inputs to spare (no motion in this projection)","M3 · move output weight onto spare","M1 · copy spare inputs to unit","M2 · hand output weight back to unit"];
+function at(K,t){var n=K.length-1;if(t>=1)return K[n].slice();var u=t*n,i=Math.floor(u),f=u-i;return K[i].map(function(v,j){return v+(K[i+1][j]-v)*f})}
+function fn(p,x){return p[2]*sg(p[0]*x+p[1])+p[5]*sg(p[3]*x+p[4])+p[6]}
+var XS=[];for(var i=0;i<=80;i++)XS.push(-4+i/10);
+var F0=XS.map(function(x){return fn(KS[0],x)});
+function dev(K,t){var p=at(K,t),m=0;XS.forEach(function(x,i){m=Math.max(m,Math.abs(fn(p,x)-F0[i]))});return m}
+var SC=1.5;function D(p){return new THREE.Vector3(p[0]/W*SC,p[2]/AS*SC,p[5]/AS*SC)}
+var st=document.getElementById("stage"),cv=document.getElementById("c"),
+R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setClearColor(0x000000,1);
+var sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(42,1,.1,100);
+function tex(){var c=document.createElement("canvas");c.width=c.height=64;var g=c.getContext("2d"),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,"rgba(255,255,255,1)");r.addColorStop(.25,"rgba(255,255,255,.55)");r.addColorStop(1,"rgba(255,255,255,0)");g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)}
+var GT=tex();
+function glow(pos,col,size){var g=new THREE.BufferGeometry().setFromPoints(pos),m=new THREE.PointsMaterial({map:GT,size:size,color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});return new THREE.Points(g,m)}
+var grid=new THREE.GridHelper(3.6,18,0x39424d,0x161b21);grid.position.y=-1.75;sc.add(grid);
+function seg(a,b,col,op){var g=new THREE.BufferGeometry().setFromPoints([a,b]),m=new THREE.LineBasicMaterial({color:col,transparent:true,opacity:op});return new THREE.Line(g,m)}
+[[1.9,0,0],[0,1.9,0],[0,0,1.9]].forEach(function(v){sc.add(seg(new THREE.Vector3(-v[0],-v[1],-v[2]),new THREE.Vector3(v[0],v[1],v[2]),0x56616d,.7))});
+var seed=7;function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
+var pts=[];for(i=0;i<40;i++){var a=(rnd()*2-1),b=(rnd()*2-1);if(Math.hypot(a,b)<.25){i--;continue}pts.push(new THREE.Vector3(a*SC,b*SC,0),new THREE.Vector3(-a*SC,-b*SC,0))}
+var cg=new THREE.BufferGeometry().setFromPoints(pts);sc.add(new THREE.LineSegments(cg,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.13})));
+sc.add(glow(pts,0xffffff,.09));
+var A=D(KS[0]),Bp=D(KS[1]);sc.add(glow([A,Bp],0xffffff,.3));
+function poly(K,col){var P=K.map(D),g=new THREE.BufferGeometry().setFromPoints(P),m=new THREE.LineBasicMaterial({color:col,transparent:true,opacity:1});return new THREE.Line(g,m)}
+var lS=poly(KS,0xff6a2b),lD=poly(KD,0x4fd8ff);sc.add(lS,lD);
+var O=new THREE.Vector3(0,0,0),og=glow([O],0xff6a2b,.55);sc.add(og);
+var N=80,tp=new Float32Array(N*3),tc=new Float32Array(N*3),tg=new THREE.BufferGeometry();
+tg.setAttribute("position",new THREE.BufferAttribute(tp,3));tg.setAttribute("color",new THREE.BufferAttribute(tc,3));
+sc.add(new THREE.Line(tg,new THREE.LineBasicMaterial({vertexColors:true})));
+var pg=glow([A],0xffffff,.5);sc.add(pg);
+var mode="S",t=.5,play=false,auto=false,th=.75,ph=1.15,rad=6.2,hud=document.getElementById("hud"),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function sel(){lS.material.opacity=mode==="S"?1:.22;lD.material.opacity=mode==="D"?1:.22;pg.material.color.set(mode==="S"?0xff6a2b:0x4fd8ff);
+ document.getElementById("bs").setAttribute("aria-pressed",mode==="S");document.getElementById("bd").setAttribute("aria-pressed",mode==="D");var c=mode==="S"?[1,.42,.17]:[.31,.85,1];for(var i=0;i<N;i++){var f=Math.pow(i/(N-1),2);tc[3*i]=c[0]*f;tc[3*i+1]=c[1]*f;tc[3*i+2]=c[2]*f}tg.attributes.color.needsUpdate=true;reset()}
+function reset(){var p=D(at(mode==="S"?KS:KD,t));for(var i=0;i<N;i++){tp[3*i]=p.x;tp[3*i+1]=p.y;tp[3*i+2]=p.z}}
+function upd(){var K=mode==="S"?KS:KD,p=D(at(K,t));for(var i=0;i<N-1;i++){tp[3*i]=tp[3*i+3];tp[3*i+1]=tp[3*i+4];tp[3*i+2]=tp[3*i+5]}tp[3*N-3]=p.x;tp[3*N-2]=p.y;tp[3*N-1]=p.z;tg.attributes.position.needsUpdate=true;
+ pg.geometry.setFromPoints([p]);var d=dev(K,t),n=K.length-1,s=mode==="S"?"straight blend":STEP[Math.min(n-1,Math.floor(t*n))];
+ hud.innerHTML="PATH POSITION  "+t.toFixed(3)+"<br>MAX |Δ FUNCTION|  <b style='color:"+(mode==="S"?"#ff6a2b":"#4fd8ff")+"'>"+(d<1e-9?d.toExponential(1):d.toFixed(3))+"</b>  / bound "+(AS/2).toFixed(2)+"<br>"+s;tel()}
+var tc2=document.getElementById("tel");
+function tel(){var w=tc2.clientWidth,h=tc2.clientHeight,dp=Math.min(devicePixelRatio||1,2);if(tc2.width!==w*dp){tc2.width=w*dp;tc2.height=h*dp}var g=tc2.getContext("2d");g.setTransform(dp,0,0,dp,0,0);g.clearRect(0,0,w,h);g.strokeStyle="#222a33";g.beginPath();for(var k=0;k<=4;k++){g.moveTo(w*k/4,0);g.lineTo(w*k/4,h)}g.moveTo(0,h-6);g.lineTo(w,h-6);g.stroke();
+ [[KS,"#ff6a2b"],[KD,"#4fd8ff"]].forEach(function(q){g.strokeStyle=q[1];g.lineWidth=2;g.beginPath();for(var i=0;i<=120;i++){var u=i/120,d=dev(q[0],u),X=u*w,Y=h-6-d/(AS/2)*(h-14);i?g.lineTo(X,Y):g.moveTo(X,Y)}g.stroke()});g.lineWidth=1;g.strokeStyle="#fff";g.beginPath();g.moveTo(t*w,0);g.lineTo(t*w,h);g.stroke();g.fillStyle="#8a96a3";g.font="10px ui-monospace,Menlo,monospace";g.fillText("|Δf|: 0 → |s|/2",6,12)}
+function lab(id,v){var q=v.clone().project(cam),e=document.getElementById(id),w=st.clientWidth,h=st.clientHeight;e.style.left=((q.x+1)/2*w)+"px";e.style.top=((1-q.y)/2*h)+"px";e.style.display=q.z<1?"block":"none"}
+function rs(){var w=st.clientWidth,h=st.clientHeight;R.setPixelRatio(Math.min(devicePixelRatio||1,2));R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+var dn=null;cv.addEventListener("pointerdown",function(e){dn=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)});cv.addEventListener("pointerup",function(){dn=null});
+cv.addEventListener("pointermove",function(e){if(!dn)return;th-=(e.clientX-dn[0])*.007;ph=Math.max(.25,Math.min(2.6,ph-(e.clientY-dn[1])*.007));dn=[e.clientX,e.clientY]});
+document.getElementById("bs").onclick=function(){mode="S";sel()};document.getElementById("bd").onclick=function(){mode="D";sel()};
+var ti=document.getElementById("t");ti.oninput=function(){t=ti.value/1000;play=false;document.getElementById("bp").setAttribute("aria-pressed",false);reset()};
+document.getElementById("bp").onclick=function(){play=!play;this.setAttribute("aria-pressed",play);this.textContent=play?"PAUSE":"PLAY"};
+function cine(on){document.body.classList.toggle("cine",on);auto=on;if(on){play=true}rs();tel()}
+document.getElementById("bc").onclick=function(){cine(true)};document.getElementById("x").onclick=function(){cine(false)};
+addEventListener("keydown",function(e){if(e.key==="Escape")cine(false)});addEventListener("resize",rs);
+var last=0;function loop(ts){var dt=Math.min((ts-last)/1000,.05);last=ts;if(play){t+=dt*.11;if(t>1)t=0;ti.value=Math.round(t*1000)}if(auto)th+=dt*.12;
+ cam.position.set(rad*Math.sin(ph)*Math.sin(th),rad*Math.cos(ph),rad*Math.sin(ph)*Math.cos(th));cam.lookAt(0,0,0);
+ var f=.6+.4*Math.sin(ts/500);og.material.size=.45+.2*f;
+ lab("lA",A);lab("lB",Bp);lab("lO",O);lab("lx",new THREE.Vector3(2,0,0));lab("ly",new THREE.Vector3(0,2,0));lab("lz",new THREE.Vector3(0,0,2));upd();R.render(sc,cam);requestAnimationFrame(loop)}
+rs();sel();if(!reduce){play=true;document.getElementById("bp").setAttribute("aria-pressed",true);document.getElementById("bp").textContent="PAUSE"}requestAnimationFrame(loop);
+})();
+</script></body></html>

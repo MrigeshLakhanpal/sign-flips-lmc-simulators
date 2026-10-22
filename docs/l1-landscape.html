@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>What does the loss landscape really look like? · Weights ≠ Function</title>
+<style>
+:root{--fg:#f2f5f8;--mu:#8a96a3;--or:#ff6a2b;--cy:#4fd8ff;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;color:var(--fg);background:#000 linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px;font:15px/1.6 system-ui,sans-serif}
+main{max-width:920px;margin:0 auto;padding:18px 14px 50px}
+.k{font:600 .72rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mu)}
+h1{font:700 clamp(1.5rem,5vw,2.3rem)/1.15 system-ui,sans-serif;margin:.3em 0 .2em;letter-spacing:-.01em}
+.sub{color:var(--mu);max-width:62ch}
+#stage{position:relative;width:100%;aspect-ratio:4/3;max-height:72vh;margin:14px 0 6px;border:1px solid #2a323b;background:#000;overflow:hidden}
+#c{width:100%;height:100%;display:block;touch-action:none}
+#hud{position:absolute;left:10px;top:8px;font:12px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#cfd8e1;pointer-events:none;text-shadow:0 0 6px #000}
+.l{position:absolute;font:11px ui-monospace,Menlo,Consolas,monospace;color:#aab4be;pointer-events:none;transform:translate(6px,-50%);white-space:nowrap}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}
+button{font:600 .8rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:var(--fg);background:#000;border:1px solid #3a444f;padding:0 14px;min-height:44px;cursor:pointer}
+button[aria-pressed="true"]{border-color:#fff;background:#10161c}
+input[type=range]{flex:1;min-width:160px;accent-color:#fff}
+.box{border-top:1px solid #2a323b;margin-top:22px;padding-top:12px}
+h2{font:700 .78rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);margin:0 0 6px}
+.mu{color:var(--mu);font-size:.88rem}code{font-family:ui-monospace,Menlo,Consolas,monospace;color:#fff}a{color:var(--cy)}
+#x{display:none;position:absolute;right:8px;top:8px;z-index:3}
+body.cine .ui{display:none}body.cine main{padding:0;max-width:none}
+body.cine #stage{position:fixed;inset:0;max-height:none;aspect-ratio:auto;margin:0;z-index:5}body.cine #x{display:block}
+</style></head><body><main>
+<p class="k ui">Weights ≠ Function · 2 of a series</p>
+<h1 class="ui">What does the loss landscape really look like?</h1>
+<p class="sub ui">The usual picture is one valley with one bottom. If many different weight settings compute the same function, there are many identical valleys, and the question is whether anything joins them. Smallest case solved exactly: one hidden layer, sigmoid units.</p>
+<div id="stage"><canvas id="c" aria-label="3D schematic loss surface: two isolated wells along a line, joined by a ring valley when a spare dimension is added"></canvas><div id="hud"></div><button id="x" aria-label="Exit cinematic mode">EXIT</button>
+<span class="l" id="lA">twin A</span><span class="l" id="lB">twin B</span><span class="l" id="lH">hill on the straight line</span></div>
+<div class="row ui"><button id="bd" aria-pressed="false">SPARE DIMENSION: OFF</button><button id="bs" aria-pressed="true">STRAIGHT ROUTE</button><button id="br" aria-pressed="false">RING ROUTE</button><button id="bp" aria-pressed="false">PLAY</button><button id="bc">CINEMATIC</button></div>
+<div class="row ui"><span class="mu">position</span><input id="t" type="range" min="0" max="1000" value="500" aria-label="Position along route"></div>
+<p class="mu ui">Drag to rotate. <b>Off:</b> you only see the line between the twins: two isolated wells and a hill. <b>On:</b> an extra dimension appears and the wells turn out to sit on one ring of equal-loss points (cyan). Cyan is low loss, orange is high loss.</p>
+<section class="box ui"><h2>Technical statement</h2>
+<p class="mu">At width r an irreducible one-hidden-layer sigmoid network has 2<sup>r</sup>r! permutation and sign-flip copies, which are isolated points of its set of equivalent networks. Proposition 1: adding one unit with output weight 0 joins every copy to the original by a piecewise-linear path (at most 10r−6 segments) along which the function is exactly constant. That path is an existence result; it does not show that the straight-line barrier is zero, which is what the experiments measure.</p>
+<p class="mu"><b>Evidence label: schematic.</b> The surface is the invented loss <code>L=(x²+y²−1)²</code>, with x as the position between the twins and y standing for the spare-unit direction. It illustrates the idea; it is not the measured landscape. Source: Lakhanpal (2026), preprint v2, App. B (Prop. 1) and Sec. 4.2; Zhao et al. (2025) for the isolated-points framing.</p>
+<p class="mu"><a href="index.html">All simulators</a> · <a href="https://github.com/MrigeshLakhanpal/sign-flips-lmc">Preprint, code, pre-registration</a></p></section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+var A=1.6,H=.9,SC=1.5;function L(x,y){var r=x*x+y*y-1;return r*r}function hh(x,y){return Math.min(L(x,y),2)*H}
+var st=document.getElementById("stage"),cv=document.getElementById("c"),R=new THREE.WebGLRenderer({canvas:cv,antialias:true});R.setClearColor(0,1);
+var sc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(42,1,.1,100);
+function tex(){var c=document.createElement("canvas");c.width=c.height=64;var g=c.getContext("2d"),r=g.createRadialGradient(32,32,0,32,32,32);r.addColorStop(0,"rgba(255,255,255,1)");r.addColorStop(.25,"rgba(255,255,255,.55)");r.addColorStop(1,"rgba(255,255,255,0)");g.fillStyle=r;g.fillRect(0,0,64,64);return new THREE.CanvasTexture(c)}
+var GT=tex();function glow(pos,col,size){return new THREE.Points(new THREE.BufferGeometry().setFromPoints(pos),new THREE.PointsMaterial({map:GT,size:size,color:col,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}))}
+var grid=new THREE.GridHelper(3.8,19,0x39424d,0x161b21);grid.position.y=-.05;sc.add(grid);
+var N=64,g=new THREE.PlaneGeometry(2*A,2*A,N,N);g.rotateX(-Math.PI/2);var pa=g.attributes.position,col=new Float32Array(pa.count*3);
+for(var i=0;i<pa.count;i++){var x=pa.getX(i),z=pa.getZ(i),l=L(x,z),tt=Math.min(l,1.5)/1.5;pa.setY(i,hh(x,z));col[3*i]=.31+(1-.31)*tt;col[3*i+1]=.85+(.42-.85)*tt;col[3*i+2]=1+(.17-1)*tt}
+g.setAttribute("color",new THREE.BufferAttribute(col,3));
+var solid=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color:0,polygonOffset:true,polygonOffsetFactor:1,polygonOffsetUnits:1,transparent:true,opacity:1}));
+var wire=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,wireframe:true,transparent:true,opacity:.8}));
+var surf=new THREE.Group();surf.add(solid,wire);sc.add(surf);
+function line(P,c,o){return new THREE.Line(new THREE.BufferGeometry().setFromPoints(P),new THREE.LineBasicMaterial({color:c,transparent:true,opacity:o}))}
+var wellP=[];for(i=0;i<=120;i++){var x=-A+2*A*i/120;wellP.push(new THREE.Vector3(x,hh(x,0)+.02,0))}
+var well=line(wellP,0xffffff,1);sc.add(well);
+var ringP=[];for(i=0;i<=120;i++){var a=2*Math.PI*i/120;ringP.push(new THREE.Vector3(Math.cos(a),.02,Math.sin(a)))}
+var ring=line(ringP,0x4fd8ff,1);sc.add(ring);
+var TW=[new THREE.Vector3(-1,.02,0),new THREE.Vector3(1,.02,0)],tg=glow(TW,0xffffff,.35);sc.add(tg);
+var NT=80,tp=new Float32Array(NT*3),tc=new Float32Array(NT*3),trg=new THREE.BufferGeometry();trg.setAttribute("position",new THREE.BufferAttribute(tp,3));trg.setAttribute("color",new THREE.BufferAttribute(tc,3));sc.add(new THREE.Line(trg,new THREE.LineBasicMaterial({vertexColors:true})));
+var pg=glow([TW[0]],0xffffff,.5);sc.add(pg);
+var spare=false,route="S",t=.5,play=false,auto=false,vis=0,th=.9,ph=1.05,rad=6,hud=document.getElementById("hud"),reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+function pos(r,u){return r==="S"?[-1+2*u,0]:[-Math.cos(Math.PI*u),Math.sin(Math.PI*u)]}
+function mx(r){var m=0;for(var i=0;i<=100;i++){var p=pos(r,i/100);m=Math.max(m,L(p[0],p[1]))}return m}
+function reset(){var p=pos(route,t);for(var i=0;i<NT;i++){tp[3*i]=p[0];tp[3*i+1]=hh(p[0],p[1])+.04;tp[3*i+2]=p[1]}}
+function sel(){if(route==="R"&&!spare)spare=true;var c=route==="S"?[1,.42,.17]:[.31,.85,1];for(var i=0;i<NT;i++){var f=Math.pow(i/(NT-1),2);tc[3*i]=c[0]*f;tc[3*i+1]=c[1]*f;tc[3*i+2]=c[2]*f}trg.attributes.color.needsUpdate=true;pg.material.color.set(route==="S"?0xff6a2b:0x4fd8ff);
+ document.getElementById("bs").setAttribute("aria-pressed",route==="S");document.getElementById("br").setAttribute("aria-pressed",route==="R");var b=document.getElementById("bd");b.setAttribute("aria-pressed",spare);b.textContent="SPARE DIMENSION: "+(spare?"ON":"OFF");reset()}
+function upd(){var p=pos(route,t),y=hh(p[0],p[1])+.04;for(var i=0;i<NT-1;i++){tp[3*i]=tp[3*i+3];tp[3*i+1]=tp[3*i+4];tp[3*i+2]=tp[3*i+5]}tp[3*NT-3]=p[0];tp[3*NT-2]=y;tp[3*NT-1]=p[1];trg.attributes.position.needsUpdate=true;pg.geometry.setFromPoints([new THREE.Vector3(p[0],y,p[1])]);
+ hud.innerHTML="ROUTE  "+(route==="S"?"straight line":"around the ring")+"<br>LOSS AT PROBE  <b style='color:"+(route==="S"?"#ff6a2b":"#4fd8ff")+"'>"+L(p[0],p[1]).toFixed(3)+"</b><br>HIGHEST LOSS ON ROUTE  "+mx(route).toFixed(3)}
+function lab(id,v){var q=v.clone().project(cam),e=document.getElementById(id),w=st.clientWidth,h=st.clientHeight;e.style.left=((q.x+1)/2*w)+"px";e.style.top=((1-q.y)/2*h)+"px";e.style.display=q.z<1?"block":"none"}
+function rs(){var w=st.clientWidth,h=st.clientHeight;R.setPixelRatio(Math.min(devicePixelRatio||1,2));R.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()}
+var dn=null;cv.addEventListener("pointerdown",function(e){dn=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)});cv.addEventListener("pointerup",function(){dn=null});
+cv.addEventListener("pointermove",function(e){if(!dn)return;th-=(e.clientX-dn[0])*.007;ph=Math.max(.25,Math.min(1.5,ph-(e.clientY-dn[1])*.007));dn=[e.clientX,e.clientY]});
+document.getElementById("bs").onclick=function(){route="S";sel()};document.getElementById("br").onclick=function(){route="R";sel()};
+document.getElementById("bd").onclick=function(){spare=!spare;if(!spare&&route==="R")route="S";sel()};
+var ti=document.getElementById("t");ti.oninput=function(){t=ti.value/1000;play=false;document.getElementById("bp").setAttribute("aria-pressed",false);reset()};
+document.getElementById("bp").onclick=function(){play=!play;this.setAttribute("aria-pressed",play);this.textContent=play?"PAUSE":"PLAY"};
+function cine(on){document.body.classList.toggle("cine",on);auto=on;if(on){play=true;spare=true;sel()}rs()}
+document.getElementById("bc").onclick=function(){cine(true)};document.getElementById("x").onclick=function(){cine(false)};
+addEventListener("keydown",function(e){if(e.key==="Escape")cine(false)});addEventListener("resize",rs);
+var last=0;function loop(ts){var dt=Math.min((ts-last)/1000,.05);last=ts;if(play){t+=dt*.11;if(t>1)t=0;ti.value=Math.round(t*1000)}if(auto)th+=dt*.12;
+ var target=spare?1:0;vis+=(target-vis)*Math.min(1,dt*4);wire.material.opacity=.8*vis;solid.material.opacity=vis;ring.material.opacity=vis;surf.visible=vis>.01;grid.visible=true;
+ cam.position.set(rad*Math.sin(ph)*Math.sin(th),rad*Math.cos(ph),rad*Math.sin(ph)*Math.cos(th));cam.lookAt(0,.3,0);
+ lab("lA",TW[0]);lab("lB",TW[1]);lab("lH",new THREE.Vector3(0,.95,0));upd();R.render(sc,cam);requestAnimationFrame(loop)}
+rs();sel();if(!reduce){play=true;document.getElementById("bp").setAttribute("aria-pressed",true);document.getElementById("bp").textContent="PAUSE"}requestAnimationFrame(loop);
+})();
+</script></body></html>
