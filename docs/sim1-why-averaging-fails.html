@@ -5,9 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Simulator 1: Why can’t you average two identical networks?</title>
 <style>
-:root{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--border:#27415c;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f7fa;--panel:#fff;--text:#14212e;--muted:#4a5c70;--teal:#00796b;--coral:#c2412d;--amber:#9a6700;--border:#c6d2de;color-scheme:light}}
-:root[data-theme="dark"]{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--border:#27415c;color-scheme:dark}
+:root{--bg:#000;--panel:#05090d;--text:#f2f5f8;--muted:#8a96a3;--teal:#4fd8ff;--coral:#ff6a2b;--amber:#ffd24a;--purple:#b794f6;--border:#2a323b;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Georgia,serif}
 main{max-width:760px;margin:0 auto;padding:18px 16px 50px}
@@ -29,6 +27,19 @@ svg text{fill:var(--muted);font:11px system-ui,sans-serif}
 .eq{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin:8px 0;overflow-x:auto;white-space:nowrap;font:1rem "Cambria Math",Georgia,serif}
 dl{margin:0;font-size:.92rem}dt{font:700 .85rem system-ui,sans-serif;color:var(--amber);margin-top:.6em}dd{margin:0}
 a{color:var(--teal)}
+
+html{background:#000}
+body{background:#000 linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px;font-family:system-ui,sans-serif}
+h1{letter-spacing:-.01em}
+h2{font:700 .8rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.q,.tag,button,.out,dt,.h,.cell,table,.hud{font-family:ui-monospace,Menlo,Consolas,monospace}
+.q{color:var(--muted);letter-spacing:.14em}
+.sec{border-radius:0;background:rgba(0,0,0,.6);border:1px solid #2a323b}
+button,.out,.eq,canvas,svg,.tag{border-radius:0}
+.out,.eq{background:#05090d;border:1px solid #1d252d}
+button{background:#000;border:1px solid #3a444f}
+button[aria-pressed="true"]{border-color:#fff;background:#10161c;color:#fff}
+canvas,svg{background:#000}
 </style>
 </head>
 <body>
@@ -107,7 +118,7 @@ function fa(x,a){
  var t=a*S.s,z=W*x+B;return (S.s-t)*sg(z)-t*sg(-z)+t}
 function fm(v){return (v<0?"−":"")+Math.abs(v).toFixed(2)}
 function ramp(u){u=Math.max(0,Math.min(1,u));
- var a=[27,42,107],b=[46,196,182],c=[255,200,87],p=u<.5?[a,b,u*2]:[b,c,(u-.5)*2];
+ var a=[8,14,30],b=[79,216,255],c=[255,255,255],p=u<.5?[a,b,u*2]:[b,c,(u-.5)*2];
  return p[0].map(function(v,i){return Math.round(v+(p[1][i]-v)*p[2])})}
 function maxd(a){var d=0;for(var i=0;i<=160;i++){var x=-4+8*i/160;d=Math.max(d,Math.abs(fa(x,a)-f0(x)))}return d}
 function draw(){

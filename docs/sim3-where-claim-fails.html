@@ -3,9 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Simulator 3: Where does the sign-flip explanation break?</title>
 <style>
-:root{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--border:#27415c;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f4f7fa;--panel:#fff;--text:#14212e;--muted:#4a5c70;--teal:#00796b;--coral:#c2412d;--amber:#9a6700;--border:#c6d2de;color-scheme:light}}
-:root[data-theme="dark"]{--bg:#0d1b2a;--panel:#14263a;--text:#e8edf3;--muted:#9fb0c3;--teal:#2ec4b6;--coral:#ff7f6b;--amber:#ffc857;--border:#27415c;color-scheme:dark}
+:root{--bg:#000;--panel:#05090d;--text:#f2f5f8;--muted:#8a96a3;--teal:#4fd8ff;--coral:#ff6a2b;--amber:#ffd24a;--purple:#b794f6;--border:#2a323b;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Georgia,serif}
 main{max-width:760px;margin:0 auto;padding:18px 16px 50px}
@@ -27,6 +25,19 @@ button[aria-pressed="true"]{border-color:var(--teal);color:var(--teal)}
 .cell.q0{background:var(--bg);color:var(--muted);border-color:var(--border)}
 dl{margin:0;font-size:.92rem}dt{font:700 .85rem system-ui,sans-serif;color:var(--amber);margin-top:.6em}dd{margin:0}
 a{color:var(--teal)}svg{width:100%;height:auto}svg text{fill:var(--muted);font:11px system-ui,sans-serif}
+
+html{background:#000}
+body{background:#000 linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px;font-family:system-ui,sans-serif}
+h1{letter-spacing:-.01em}
+h2{font:700 .8rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.q,.tag,button,.out,dt,.h,.cell,table,.hud{font-family:ui-monospace,Menlo,Consolas,monospace}
+.q{color:var(--muted);letter-spacing:.14em}
+.sec{border-radius:0;background:rgba(0,0,0,.6);border:1px solid #2a323b}
+button,.out,.eq,canvas,svg,.tag{border-radius:0}
+.out,.eq{background:#05090d;border:1px solid #1d252d}
+button{background:#000;border:1px solid #3a444f}
+button[aria-pressed="true"]{border-color:#fff;background:#10161c;color:#fff}
+canvas,svg{background:#000}
 </style></head><body><main>
 <p class="q">Simulator 3 of a series · interactive</p>
 <h1>When does “a missing symmetry explains it” stop being enough?</h1>
@@ -61,11 +72,11 @@ var T=["Coffee (triangle)","Triangle","Quadrilateral","Pentagon","Hexagon"],C=[1
 var D=[[[3,28,28,.04],[3,36,36,.05],[3,38,34,.05]],[[3,46,46,.06],[3,47,47,.06],[3,47,47,.06]],[[4,28,28,.07],[4,32,30,.07],[3,48,44,.22]],[[5,18,11,3.26],[4,21,21,.07],[3,46,46,.18]],[[6,30,22,.09],[4,29,23,.13],[4,48,18,2.58]]];
 var T6={1:"1%: same lines 135 pairs (median 0.03, max 0.20); different lines 15 pairs (median 0.17, range 0.00–4.27).",2:"2%: same lines 157 pairs (median 0.03, max 0.21); different lines 8 pairs (median 3.74, range 2.38–9.58).",5:"5%: same lines 189 pairs (median 0.06, max 0.74); different lines 38 pairs (median 1.06, range 0.02–6.06)."};
 var S={pick:{},rev:false,mt:1};
-function ramp(u){u=Math.max(0,Math.min(1,u));var a=[27,42,107],b=[46,196,182],c=[255,200,87],p=u<.5?[a,b,u*2]:[b,c,(u-.5)*2];return p[0].map(function(v,i){return Math.round(v+(p[1][i]-v)*p[2])})}
+function ramp(u){u=Math.max(0,Math.min(1,u));var a=[8,14,30],b=[79,216,255],c=[255,255,255],p=u<.5?[a,b,u*2]:[b,c,(u-.5)*2];return p[0].map(function(v,i){return Math.round(v+(p[1][i]-v)*p[2])})}
 function tval(d){return S.mt===1?(Math.log10(d[3])-Math.log10(.03))/(Math.log10(4)-Math.log10(.03)):d[2]/d[1]}
 function render(){
  var g=document.getElementById("g"),h="<div class='h'></div>";C.forEach(function(c){h+="<div class='h'>"+c+"% tolerance</div>"});
- T.forEach(function(t,r){h+="<div class='h'>"+t+"</div>";C.forEach(function(c,k){var d=D[r][k],id=r+"-"+k,bad=d[3]>.5,cls="cell"+(S.pick[id]?" pick":"")+(S.rev?(bad?" bad":""):" q0"),st=S.rev?"background:rgb("+ramp(tval(d))+")":"";
+ T.forEach(function(t,r){h+="<div class='h'>"+t+"</div>";C.forEach(function(c,k){var d=D[r][k],id=r+"-"+k,bad=d[3]>.5,cls="cell"+(S.pick[id]?" pick":"")+(S.rev?(bad?" bad":""):" q0"),st=S.rev?(function(k){return "background:rgb("+k+");color:"+((.2126*k[0]+.7152*k[1]+.0722*k[2])>140?"#000":"#fff")})(ramp(tval(d))):"";
   var tx=S.rev?(S.mt===1?d[3].toFixed(2)+(bad?" ✗":" ✓"):(100*d[2]/d[1]).toFixed(0)+"% same")+"<br>h*="+d[0]+", "+d[1]+" pairs":(S.pick[id]?"fail?":"?");
   h+="<button class='"+cls+"' style='"+st+"' data-id='"+id+"' aria-pressed='"+!!S.pick[id]+"'>"+tx+"</button>"})});
  g.innerHTML=h;
