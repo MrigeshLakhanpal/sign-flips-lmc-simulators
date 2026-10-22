@@ -15,6 +15,10 @@ This repository holds only the explanatory layer; it does not re-run the experim
 
 | # | Question | Type | Evidence |
 |---|----------|------|----------|
+| 5 | Why is merging models so hard? | Rotatable weight-space view (Three.js) with spare-unit detour and output-change telemetry | Exact geometry of Eq. 3 and Lemma 1 for one toy unit |
+| 6 | What does the loss landscape really look like? | Rotatable schematic loss surface, spare dimension on/off | Schematic, illustrative only |
+| 7 | Do two networks trained from different seeds learn the same thing? | Live in-browser training, flip detection, barrier before/after alignment, capacity scan | Live mini-replication (simplified polygons), not the preprint's data |
+| 8 | Can your measurement hide what is really happening? | Scoreboard, interval plot, saturation schematic | Preprint Sec. 5.1 and 5.4; schematic curves |
 | 1 | If two networks compute the same function, why can't you average them? | Prediction game, flip-blend simulator, heat map, rotatable 3D surface | Toy model of Eq. 3 and Lemma 1 |
 | 2 | If two solutions are secretly the same, why is there a hill between them? | Rotatable loss landscape | Toy model, illustrative only |
 | 3 | When does "a missing symmetry explains it" stop being enough? | Task-by-threshold heat map, predict then reveal | Preprint Tables 5 and 6 (Study 2) |
@@ -32,7 +36,7 @@ The toy models were checked numerically: the sign-flip identity holds to about 1
 
 ## Run locally
 
-Every page is one self-contained HTML file with no dependencies. Open `docs/index.html`, or serve the folder:
+Pages 1–4 are self-contained HTML files; pages 5–6 load one pinned script (three.js r128) from cdnjs, so they need an internet connection. Open `docs/index.html`, or serve the folder:
 
 ```
 python -m http.server 8000 --directory docs
@@ -48,6 +52,10 @@ python -m http.server 8000 --directory docs
 | `docs/sim2-loss-landscape.html` | Simulator 2 |
 | `docs/sim3-where-claim-fails.html` | Simulator 3 |
 | `docs/sim4-barrier-vs-width.html` | Simulator 4 |
+| `docs/m1-merging.html` | Simulator 5 (loads three.js r128 from cdnjs) |
+| `docs/l1-landscape.html` | Simulator 6 (loads three.js r128 from cdnjs) |
+| `docs/lab-live-training.html` | Simulator 7 (live training, self-contained) |
+| `docs/f1-failed-prediction.html` | Simulator 8 |
 | `CITATION.cff` | Citation metadata |
 
 ## Data and credit
