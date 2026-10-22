@@ -1,0 +1,61 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>I pre-registered a prediction. It failed. · Weights ≠ Function</title><style>
+:root{--fg:#f2f5f8;--mu:#8a96a3;--or:#ff6a2b;--cy:#4fd8ff;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;color:var(--fg);background:#000 linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px) 0 0/48px 48px;font:15px/1.6 system-ui,sans-serif}
+main{max-width:920px;margin:0 auto;padding:18px 14px 50px}
+.k{font:600 .72rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--mu)}
+h1{font:700 clamp(1.5rem,5vw,2.3rem)/1.15 system-ui,sans-serif;margin:.3em 0 .2em;letter-spacing:-.01em}
+.sub{color:var(--mu);max-width:62ch}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;align-items:center}
+button,select{font:600 .8rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em;color:var(--fg);background:#000;border:1px solid #3a444f;padding:0 14px;min-height:44px;cursor:pointer}
+button[aria-pressed="true"]{border-color:#fff;background:#10161c}
+input[type=range]{flex:1;min-width:160px;accent-color:#fff}
+canvas{display:block;width:100%;background:#000;border:1px solid #2a323b}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hud{font:12px/1.6 ui-monospace,Menlo,Consolas,monospace;color:#cfd8e1;margin:8px 0}
+.box{border-top:1px solid #2a323b;margin-top:22px;padding-top:12px}
+h2{font:700 .78rem ui-monospace,Menlo,Consolas,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);margin:0 0 6px}
+.mu{color:var(--mu);font-size:.88rem}code{font-family:ui-monospace,Menlo,Consolas,monospace;color:#fff}a{color:var(--cy)}
+table{border-collapse:collapse;width:100%;font:12px ui-monospace,Menlo,Consolas,monospace}td,th{border-bottom:1px solid #2a323b;padding:6px;text-align:left}
+</style></head><body><main>
+<p class="k">Weights ≠ Function · 4 of a series</p>
+<h1>Can your measurement hide what’s really happening?</h1>
+<p class="sub">I pre-registered a prediction about how big the merging barrier would be. It failed. The reason is a lesson about metrics: some measurements saturate and stop telling you anything. Smallest case: one hidden layer, sigmoid units.</p>
+<section class="box"><h2>Pre-registered scoreboard (Study 2, 2% inclusion)</h2>
+<table><tr><th>Hypothesis</th><th>Statement</th><th>Result</th></tr>
+<tr><td>H4a</td><td>Exact-search residual: upper quartile ≤ ε</td><td>✓ all 5 tasks</td></tr>
+<tr><td>H4b</td><td>Permutation-only median above 2 points in flip pairs</td><td>✓ all 5 tasks</td></tr>
+<tr><td>H4c</td><td>Weight matching with flips within ε of exact in ≥80% of pairs</td><td>✓ all 5 tasks</td></tr>
+<tr><td>H5</td><td>Permutation-only worse than flips in ≥90% of flip pairs, under 4 measures</td><td>✓ all 5 tasks</td></tr>
+<tr><td>H1</td><td>All pairs learn the same lines</td><td>✗ quadrilateral (2 of 32 pairs), hexagon (6 of 29)</td></tr>
+<tr><td>H7</td><td>The weights predict the size of the barrier (error)</td><td>✗ ρ = 0.007</td></tr></table></section>
+<section class="box"><h2>The failed test, and the exploratory re-test</h2>
+<svg id="fp" viewBox="0 0 600 170" style="width:100%;background:#000;border:1px solid #2a323b" role="img" aria-label="Interval plot of three correlations"></svg>
+<p class="mu">Spearman ρ between M = Σ|sᵢ|/2 over flipped units and the barrier left without flips (129 pairs), 95% bootstrap intervals. <b>Circle:</b> pre-registered, error barrier. <b>Diamonds:</b> exploratory loss re-tests, decided after seeing the failure.</p></section>
+<section class="box"><h2>Why it failed: saturation</h2>
+<div class="row"><span class="mu">erased output weight M</span><input id="m" type="range" min="0" max="100" value="30" aria-label="Erased output weight"></div>
+<svg id="sat" viewBox="0 0 600 240" style="width:100%;background:#000;border:1px solid #2a323b" role="img" aria-label="Schematic: error barrier saturates, loss barrier keeps growing"></svg>
+<p class="mu"><b>Schematic, not data.</b> Once a substantial unit is erased at the midpoint, the blend predicts “negative” almost everywhere, so the error barrier caps near the task’s positive rate (observed: median 17–22 points against positive rates of 18.8–22.1%). Loss has no such ceiling. Orange: error barrier. Cyan: loss barrier.</p></section>
+<section class="box"><h2>Technical statement</h2>
+<p class="mu">H7 was tested as ρ(M, BF), where BF is the training-error barrier with the exact_sign permutation applied without its flips. The pre-registered rule labels the result “weak” because the interval includes zero; the paper reports it as not supported. Sensitivity: ρ = −0.16 [−0.35, 0.03] at 1% and −0.21 [−0.37, −0.05] at 5%. The loss re-test (decision D8) gave raw ρ = 0.86 [0.79, 0.90] and calibrated ρ = 0.65 [0.54, 0.75]; raw losses grow with weight scale, so part of the raw correlation may be scale. A confirmatory test needs a fresh pre-registered run.</p>
+<p class="mu"><b>Evidence label:</b> scoreboard and intervals are transcribed from the preprint (Sec. 5.1, 5.4); the saturation curves are a schematic. Scope: one hidden layer, sigmoid. Source: Lakhanpal (2026), preprint v2.</p>
+<p class="mu"><a href="index.html">All simulators</a> · <a href="https://github.com/MrigeshLakhanpal/sign-flips-lmc">Preprint, code, pre-registration</a></p></section>
+</main>
+<script>
+(function(){
+var R=[["error barrier (pre-registered)",.007,-.18,.19,0],["raw loss (exploratory)",.86,.79,.90,1],["calibrated loss (exploratory)",.65,.54,.75,1]];
+function FX(v){return 230+(v+.4)/1.4*350}
+var h="<line x1='"+FX(0)+"' y1='10' x2='"+FX(0)+"' y2='135' stroke='#39424d' stroke-dasharray='4 3'/>";
+[-.4,0,.4,.8,1].forEach(function(v){h+="<text x='"+(FX(v)-8)+"' y='158' fill='#8a96a3' font-size='11'>"+v+"</text>"});
+R.forEach(function(r,i){var y=34+i*40;h+="<text x='6' y='"+(y+4)+"' fill='#cfd8e1' font-size='11'>"+r[0]+"</text><line x1='"+FX(r[2])+"' y1='"+y+"' x2='"+FX(r[3])+"' y2='"+y+"' stroke='#4fd8ff' stroke-width='2'/>"+
+ (r[4]?"<polygon points='"+FX(r[1])+","+(y-7)+" "+(FX(r[1])+7)+","+y+" "+FX(r[1])+","+(y+7)+" "+(FX(r[1])-7)+","+y+"' fill='#fff'/>":"<circle cx='"+FX(r[1])+"' cy='"+y+"' r='6' fill='#ff6a2b'/>")});
+document.getElementById("fp").innerHTML=h;
+function sat(){var M=+document.getElementById("m").value/100,p=.21,e=[],l=[],i;var g="<line x1='40' y1='200' x2='580' y2='200' stroke='#39424d'/><line x1='40' y1='200' x2='40' y2='16' stroke='#39424d'/>";
+ var pe="",pl="";for(i=0;i<=60;i++){var m=i/60,er=p*(1-Math.exp(-5*m)),lo=m*.9;pe+=(i?"L":"M")+(40+m*540)+","+(200-er/.3*170)+" ";pl+=(i?"L":"M")+(40+m*540)+","+(200-lo/1.0*170)+" "}
+ g+="<line x1='40' y1='"+(200-p/.3*170)+"' x2='580' y2='"+(200-p/.3*170)+"' stroke='#ff6a2b' stroke-dasharray='4 4' opacity='.6'/><text x='46' y='"+(200-p/.3*170-4)+"' fill='#ff6a2b' font-size='11'>positive rate ≈ 0.21 (ceiling)</text>";
+ g+="<path d='"+pe+"' fill='none' stroke='#ff6a2b' stroke-width='3'/><path d='"+pl+"' fill='none' stroke='#4fd8ff' stroke-width='3'/>";
+ var X=40+M*540;g+="<line x1='"+X+"' y1='16' x2='"+X+"' y2='200' stroke='#fff'/><text x='300' y='232' fill='#8a96a3' font-size='11'>erased output weight M →</text><text x='46' y='14' fill='#8a96a3' font-size='11'>barrier (schematic units)</text>";
+ document.getElementById("sat").innerHTML=g}
+document.getElementById("m").oninput=sat;sat();
+})();
+</script></body></html>
